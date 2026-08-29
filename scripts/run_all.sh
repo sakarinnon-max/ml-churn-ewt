@@ -1,7 +1,7 @@
 #!/bin/bash
 # Gate: execute every notebook top-to-bottom on sample data (headless).
 # Usage: bash scripts/run_all.sh [chapter-number ...]   e.g. bash scripts/run_all.sh 00 04
-set -u
+set -u -o pipefail
 cd "$(dirname "$0")/.."
 # เรียก jupyter-nbconvert ของ venv ตรงๆ เท่านั้น — ห้ามใช้ "python -m jupyter nbconvert"
 # เพราะมันค้นหา jupyter-nbconvert ผ่าน PATH แล้วไปเจอของ Anaconda (kernel คนละ sklearn!)
