@@ -1,0 +1,12 @@
+jupyter
+nbformat
+nbclient
+pandas
+scikit-learn
+matplotlib
+seaborn
+openpyxl
+pyarrow
+python-dotenv
+requests
+joblib
