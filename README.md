@@ -1,73 +1,91 @@
-# ML Churn Prediction — หลักสูตรสไตล์ DataCamp สำหรับ CEO 🎓
+# Student Churn Early-Warning — Online Tutoring Business
 
-ทำนายนักเรียนคอร์สติวเข้ม (มี.ค.–ก.ย.) ที่มีแนวโน้มจะออกในแต่ละเดือน ด้วย scikit-learn
-โดย **คุณเขียนโค้ด ML เองทุกบท** — PO เตรียมข้อมูล ระบบตรวจคำตอบ และเฉลยไว้ให้แล้ว
+> ⚠️ **DRAFT** — โครงและข้อเท็จจริงถูกเตรียมไว้แล้ว ส่วนที่เป็น `TODO(CEO)` เจ้าของโปรเจกต์ต้องเขียนเองด้วยภาษาตัวเองก่อนเปิด public
 
-## เริ่มยังไง
+Predicting which students are at risk of cancelling their monthly subscription at a Thai online tutoring school (~660 students/season), so mentors can reach out **before** the cancellation happens.
+
+I run this business. The model was built on our real operational data (attendance, exam checkpoints, engagement, payment timing) — and this public repo runs entirely on a **synthetic sample dataset** so that no real student data ever leaves the company.
+
+<!-- TODO(CEO): 2-3 ประโยคของคุณเอง — ทำไมถึงลุกขึ้นมาสร้างโมเดลนี้ (เช่น churn เจ็บตรงไหนในธุรกิจจริง) -->
+
+## Honest results (on real data)
+
+| Metric (season 2569, out-of-fold) | Value |
+|---|---|
+| Average Precision | 0.213 |
+| Precision@30 — model | 0.240 |
+| Precision@30 — existing "tier" heuristic | **0.273** |
+
+**The model lost to our existing human-designed tier heuristic** on the metric that matters operationally (precision in the top-30 list our mentors can actually call each month). The pre-registered deploy gate therefore says: don't replace the heuristic — **blend** the two ranked lists and keep monitoring.
+
+I consider this the most valuable part of the project: the evaluation was honest enough to say "not yet."
+
+<!-- TODO(CEO): 1-2 ประโยค — คุณได้เรียนรู้อะไรจากการที่โมเดล "แพ้" heuristic ของทีมตัวเอง -->
+
+## What's inside (method highlights)
+
+- **Right-censored labels** (ch01) — months where the outcome isn't knowable yet are labeled `NaN`, never assumed to be "stayed".
+- **Leakage discipline** (ch04) — every feature is built through a `cutoff()` helper that only sees data available at prediction time; the course even plants a leakage trap (`att_next_month_pct`) that must be caught.
+- **Time-aware validation** (ch06) — expanding-window cross-validation over months, because a random split would let the model peek at the future.
+- **A metric tied to reality** (ch05/06) — precision@30, because 30 is roughly how many outreach calls our mentors can make per month; accuracy would be meaningless at a ~low monthly churn base rate.
+- **Uncertainty** (ch06) — bootstrap confidence intervals before believing any comparison.
+- **Engineering hygiene** — schema contracts (`src/contracts.py`), a sample/real data switch (`src/config.py`), one shared feature builder for both training and scoring (`src/churn_utils.py`) to prevent train/serve skew, and a smoke test gate (`scripts/smoke_test.py`).
+
+## A few pictures (generated from the synthetic sample in this repo)
+
+| | |
+|---|---|
+| ![Survival curve](figures/survival_curve.png) | ![Threshold vs mentor capacity](figures/threshold_vs_mentor_capacity.png) |
+| *Survival curve — % of the March cohort still enrolled each month* | *Threshold sweep — the cutoff is chosen where mentor call capacity (~30/month) sits* |
+| ![Model comparison](figures/model_comparison_bootstrap_ci.png) | ![Coefficients](figures/model_coefficients.png) |
+| *LogReg vs HistGradientBoosting with bootstrap 95% CIs — overlapping, so keep the simpler model* | *What the model looks at (logistic regression coefficients)* |
+
+> Numbers in these charts come from the **synthetic** dataset; the headline results table above is from the real (private) data.
+
+## Reproduce (3 commands)
 
 ```bash
-cd ml-churn
-source venv/bin/activate          # venv ติดตั้งไว้ให้แล้ว
-jupyter notebook notebooks/       # เปิดสมุดบทเรียน
+python3 -m venv venv && ./venv/bin/pip install -r requirements.txt
+bash scripts/run_all.sh          # executes every notebook on the synthetic sample
+./venv/bin/python scripts/smoke_test.py
 ```
 
-เริ่มที่ `notebooks/ch00_setup_tour.ipynb` แล้วไล่ตามลำดับ บทละ ~60–90 นาที
-
-> ⚠️ **เครื่องนี้มี Anaconda** — 2 กับดักที่เจอมาแล้วจริง:
-> 1. เปิด notebook ให้ใช้ `./venv/bin/jupyter notebook` เสมอ (ห้ามพิมพ์ `jupyter` เฉยๆ — PATH จะพาไป Anaconda)
-> 2. ห้ามใช้ `python -m jupyter nbconvert` (มันค้นหา `jupyter-nbconvert` ผ่าน PATH → ได้ของ Anaconda
->    → kernel เป็น sklearn คนละ version → pickle โมเดลพัง) — `scripts/run_all.sh` เรียก
->    `./venv/bin/jupyter-nbconvert` ตรงๆ ให้แล้ว
-
-## หลักสูตร 9 บท
-
-| บท | เรื่อง | ได้อะไร |
-|----|-------|---------|
-| 00 | ติดตั้ง + ทัวร์ข้อมูล | เห็นธุรกิจตัวเองใน DataFrame ครั้งแรก |
-| 01 | นิยามปัญหา + สร้าง label | labels_monthly + **การบ้าน: รวมบันทึกยกเลิกลง label sheet** |
-| 02 | Data wrangling 2 ปี | ข้อมูล 68+69 เข้า schema เดียว |
-| 03 | EDA | เห็น pattern churn ด้วยตาก่อนใช้โมเดล |
-| 04 | Feature engineering ⭐ | ตาราง (นักเรียน, เดือน) + บทเรียน leakage |
-| 05 | โมเดลแรก (LogReg) | PR curve, precision@30, เทียบ baseline |
-| 06 | Validation + threshold | expanding window, CI, save โมเดลจริง |
-| 07 | อ่านโมเดล | "ทำไมน้องคนนี้เสี่ยง" เป็นภาษาไทย |
-| 08 | Deploy | risk report รายเดือน → แผนต่อ LINE/Eduwise |
-
-## กติกาการเรียน (แบบ DataCamp)
-
-- ทุกแบบฝึกหัดมี **skeleton เว้นช่อง `____`** → เติมเอง → รัน `checks.check(...)` เป็นปุ่ม submit
-- ติดขัด: เปิด **คำใบ้ 1** (แนวทาง) → **คำใบ้ 2** (function ที่ใช้) → ค่อยดูเฉลย (`%load`)
-- ห้ามดูเฉลยก่อนลองเอง อย่างน้อย 10 นาที 😄
-
-## โหมดข้อมูล
-
-- **default = SAMPLE**: ข้อมูลจำลอง 310 คน 2 ซีซัน (ฝัง pattern จริง) — ทุกสมุดรันได้ทันที
-- **REAL**: `export ML_CHURN_DATA=real` หลังทำบท 02 เสร็จ (ข้อมูลอยู่ `data/processed/`)
-- ข้อมูลจริงปี 69 ดึงจาก Supabase แล้วที่ `data/raw/2569_supabase/` (สคริปต์ `src/eduwise_extract.py` — read-only)
-- ข้อมูลปี 68: วางไฟล์ Sheets/Excel export ที่ `data/raw/2568/`
-- Label จริง: กรอกตาม `data/raw/labels/label_sheet_template.csv`
-
-## โครงสร้าง
+## Repo structure
 
 ```
-notebooks/       สมุดบทเรียน 9 บท (สร้างจาก notebooks_src/ ด้วย src/nb_build.py)
-solutions/       เฉลยรายข้อ (%load ได้จากในสมุด)
-src/             contracts, churn_utils (ฟังก์ชันกลาง), checks (ตัวตรวจ), extractor
-data/sample/     ข้อมูลจำลอง (git-friendly, รันได้ทุกเครื่อง)
-models/          โมเดลที่ save จากบท 06
-reports/         risk_YYYY-MM.csv จากบท 08
-scoring/         score_month.py = สคริปต์ production (บท 08 ให้เติม TODO)
-scripts/         run_all.sh (รันทุกสมุด check สุขภาพ), smoke_test.py
-docs/            data-dictionary.md, authoring-guide.md
+notebooks/       ch00–ch08: setup → labels → wrangling → EDA → features → model
+                 → validation → interpretation → deploy (executed on sample data)
+src/             config, schema contracts, shared feature/label builders, checkers
+data/sample/     synthetic dataset (seeded generator: src/make_synthetic.py)
+scoring/         monthly scoring script (production shape)
+solutions/       per-exercise answer keys (course scaffolding)
+docs/            data dictionary, course guide
 ```
 
-## คำถามที่จะเจอแน่
+## How this was built — and what is mine
 
-**ทำไมต้องมี label sheet?** — Eduwise ทับประวัติการยกเลิก (ไม่มี drop date) เราจึงสร้าง label
-ย้อนหลังจาก DB ไม่ได้ ต้องใช้บันทึกของคุณ นี่คืองานสำคัญที่สุดของโปรเจกต์ ไม่ใช่ตัวโมเดล
+This project is a structured, exercise-driven course **built with AI assistance (Claude) acting as the tutor**: the scaffolding, auto-checkers, and answer keys were AI-generated around my real business problem and my real data.
 
-**โมเดลต้องดีแค่ไหนถึง deploy?** — เกณฑ์ที่ตกลงกัน: precision@30 บน holdout ปี 69
-ต้องชนะ tier heuristic (red/orange) ที่ใช้อยู่ ถ้าไม่ชนะ = deploy ranked list แบบผสมไปก่อน
-แล้วเก็บข้อมูลสะอาดๆ รอซีซัน 2570
+**The exercise solutions in notebooks ch01–ch07 are my own work** — label design, EDA, feature engineering, model training, validation, and interpretation, written by me and verified by the course's checkers.
 
-*สร้างโดยคุณ PO · ก.ค. 2569 (Aug 2026) · แผน: ~/.claude/plans/po-python-rustling-hopcroft.md*
+The real-data ETL (Supabase extraction, payment reconciliation) exists privately and is excluded here for data-protection reasons (PDPA): this repo contains **zero real student records** — names in the sample data are synthetic (`น้อง...` pattern), generated with a fixed random seed.
+
+<!-- TODO(CEO): ปรับย่อหน้าบนให้เป็นเสียงคุณเอง + ระบุสิ่งที่คุณภูมิใจว่าทำเองได้ -->
+
+## What I'd do next
+
+<!-- TODO(CEO): เลือก 2-3 ข้อที่คุณอยากทำจริงและอธิบายได้ เช่น:
+- เก็บข้อมูลซีซันถัดไปแล้ว retrain + เทียบกับ blend list
+- เพิ่ม features ฝั่ง engagement (Discord activity)
+- ทดสอบ threshold ตาม capacity ของ mentor ที่เปลี่ยนไป
+-->
+
+---
+
+## สรุปภาษาไทย
+
+โปรเจกต์ทำนายความเสี่ยงที่นักเรียนจะยกเลิกคอร์สรายเดือนของโรงเรียนกวดวิชาออนไลน์ (~660 คน/ซีซัน) เพื่อให้ mentor โทรดูแลได้ก่อนเด็กหาย — เทรนบนข้อมูลจริงของธุรกิจ แต่ repo สาธารณะนี้รันบน**ข้อมูลสังเคราะห์ทั้งหมด**เพื่อคุ้มครองข้อมูลส่วนบุคคลของนักเรียน (PDPA)
+
+ผลลัพธ์ตรงไปตรงมา: precision@30 ของโมเดล (0.240) **แพ้** ระบบ tier เดิมที่ทีมออกแบบเอง (0.273) → ข้อสรุปคือใช้แบบผสม (blend) ไม่ใช่แทนที่ — และผมถือว่าการประเมินที่ซื่อสัตย์พอจะบอกว่า "ยังไม่ชนะ" คือคุณค่าหลักของงานนี้
+
+<!-- TODO(CEO): 2-3 ประโยคปิดท้ายภาษาไทยในเสียงของคุณ -->
