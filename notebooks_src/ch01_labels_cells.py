@@ -67,7 +67,10 @@ print("โหมดข้อมูล:", "SAMPLE (ข้อมูลจำลอ
 ("code", """# template สำหรับกรอกบันทึกยกเลิก — อยู่ที่ data/raw/labels/
 from src.config import LABELS_DIR
 
-template = pd.read_csv(LABELS_DIR / "label_sheet_template.csv")
+template_path = LABELS_DIR / "label_sheet_template.csv"
+if not template_path.exists():  # public repo: ไฟล์ตัวอย่างอยู่ใน data/sample
+    template_path = DATA_DIR / "label_sheet_template.csv"
+template = pd.read_csv(template_path)
 template"""),
 
 ("md", """แถวตัวอย่าง 2 แถวในไฟล์โชว์ 2 เคสหลัก: ยกเลิกหมด (full → churn)

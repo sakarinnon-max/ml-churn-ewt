@@ -1,0 +1,3 @@
+student_code,display_name,year,subjects,cancel_date,cancel_month,partial_or_full,source,confidence,note
+1234,น้องตัวอย่าง ใจดี,2568,คณิต;ฟิสิกส์;เคมี;ชีวะ,2025-06-28,2025-06,full,line,high,ผู้ปกครองแจ้งทางไลน์ ย้ายไปเรียนที่อื่น
+5678,น้องตัวอย่าง สองคน,2569,ฟิสิกส์;เคมี,2026-05-30,2026-05,partial,sheet,medium,ลดเหลือ 2 วิชา (ไม่นับเป็น churn — เป็น subject_drop)
