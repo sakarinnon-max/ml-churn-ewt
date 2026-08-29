@@ -1,0 +1,15 @@
+# environment
+venv/
+__pycache__/
+.ipynb_checkpoints/
+.env
+
+# macOS
+.DS_Store
+
+# private data & artifacts — never commit (PDPA: real student data lives outside this repo)
+data/raw/
+data/processed/
+reports/
+models/
+*.bak
