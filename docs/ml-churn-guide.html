@@ -1,0 +1,428 @@
+<title>ML-Churn — คู่มือข้อมูลและทิศทาง</title>
+<style>
+  :root{
+    --bg:#FBFAF5; --card:#FFFFFF; --ink:#352E28; --muted:#84796B; --line:#E8E4D8;
+    --accent:#75873B; --accent-ink:#5C6B2E; --accent-soft:#F0F3E1;
+    --warn:#A9762C; --warn-soft:#F8EFDD; --good:#4C7D5A; --good-soft:#E7F1E9;
+    --code-bg:#F3F1E8; --head-bg:#F7F5EC;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#201C18; --card:#282320; --ink:#EDE7DC; --muted:#A79B89; --line:#3C352E;
+      --accent:#ADBE68; --accent-ink:#C4D383; --accent-soft:#343A20;
+      --warn:#D8A452; --warn-soft:#3B3122; --good:#8CB795; --good-soft:#27352B;
+      --code-bg:#2F2A25; --head-bg:#2C2723;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#201C18; --card:#282320; --ink:#EDE7DC; --muted:#A79B89; --line:#3C352E;
+    --accent:#ADBE68; --accent-ink:#C4D383; --accent-soft:#343A20;
+    --warn:#D8A452; --warn-soft:#3B3122; --good:#8CB795; --good-soft:#27352B;
+    --code-bg:#2F2A25; --head-bg:#2C2723;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Sukhumvit Set","Noto Sans Thai","Thonburi","Leelawadee UI",-apple-system,"Segoe UI",sans-serif;
+    font-size:16px; line-height:1.8;
+  }
+  .wrap{max-width:920px; margin:0 auto; padding:48px 24px 96px}
+  .eyebrow{font-size:12px; letter-spacing:.14em; color:var(--accent-ink); font-weight:700; text-transform:uppercase}
+  h1{font-size:32px; line-height:1.35; margin:8px 0 4px; text-wrap:balance}
+  .sub{color:var(--muted); margin:0 0 20px}
+  h2{font-size:22px; margin:0 0 4px; text-wrap:balance}
+  h3{font-size:17px; margin:24px 0 8px}
+  section{margin-top:56px}
+  .sec-eyebrow{font-size:12px; letter-spacing:.12em; color:var(--muted); font-weight:700}
+  .lede{color:var(--muted); margin:4px 0 20px; max-width:70ch}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 0}
+  .chip{font-size:13px; font-weight:600; padding:4px 12px; border-radius:999px; background:var(--accent-soft); color:var(--accent-ink); border:1px solid var(--line)}
+  .chip.good{background:var(--good-soft); color:var(--good)}
+  .chip.warn{background:var(--warn-soft); color:var(--warn)}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:20px 24px; margin:16px 0}
+  .tbl-wrap{overflow-x:auto; margin:12px 0}
+  table{border-collapse:collapse; width:100%; font-size:14px; line-height:1.65}
+  th{background:var(--head-bg); text-align:left; font-weight:700; padding:8px 12px; border-bottom:2px solid var(--line); white-space:nowrap}
+  td{padding:8px 12px; border-bottom:1px solid var(--line); vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.num,th.num{text-align:right; font-variant-numeric:tabular-nums}
+  code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:.86em; background:var(--code-bg); padding:1px 6px; border-radius:5px; white-space:nowrap}
+  .tag{display:inline-block; font-size:11.5px; font-weight:700; padding:1px 9px; border-radius:999px; margin-left:8px; vertical-align:2px}
+  .tag.y68{background:var(--accent-soft); color:var(--accent-ink)}
+  .tag.y69{background:var(--good-soft); color:var(--good)}
+  .tag.auto{background:var(--warn-soft); color:var(--warn)}
+  .tbl-title{display:flex; align-items:baseline; flex-wrap:wrap; gap:4px; margin:0}
+  .rowdef{color:var(--muted); font-size:14px; margin:2px 0 0}
+  figure{margin:24px 0}
+  figcaption{font-size:13.5px; color:var(--muted); margin-top:10px; text-align:center}
+  svg{max-width:100%; height:auto; display:block; margin:0 auto}
+  .callout{border-left:4px solid var(--accent); background:var(--accent-soft); border-radius:0 10px 10px 0; padding:14px 20px; margin:16px 0}
+  .callout.warn{border-left-color:var(--warn); background:var(--warn-soft)}
+  .callout p{margin:0}
+  ol.steps{padding-left:22px; margin:8px 0}
+  ol.steps li{margin:10px 0}
+  .grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; margin:16px 0}
+  .stat{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px 20px}
+  .stat .v{font-size:26px; font-weight:800; font-variant-numeric:tabular-nums}
+  .stat .l{font-size:13.5px; color:var(--muted)}
+  .foot{margin-top:64px; padding-top:16px; border-top:1px solid var(--line); color:var(--muted); font-size:13px}
+  a{color:var(--accent-ink)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Earlyworm Tutor · ML-Churn Project</div>
+    <h1>คู่มือข้อมูล และทิศทางของโมเดลทำนายน้องเสี่ยงหลุด</h1>
+    <p class="sub">อัปเดต 11 ส.ค. 2026 · จัดทำโดยคุณ PO — สรุปว่าเรามีข้อมูลอะไร แต่ละคอลัมน์ใช้ทำอะไร และปลายทางจะได้อะไร</p>
+    <div class="chips">
+      <span class="chip good">✓ Label ปี 68 ครบ 100%</span>
+      <span class="chip good">✓ Label ปี 69 ตรวจ 2 แหล่ง ตรงกัน 100%</span>
+      <span class="chip good">✓ ผ่าน data contract ทุกตาราง</span>
+      <span class="chip warn">รอ: เดือน ก.ย. 69 (หลัง 3 ก.ย.)</span>
+    </div>
+  </header>
+
+  <!-- ================= 1. สถานะข้อมูล ================= -->
+  <section>
+    <div class="sec-eyebrow">ส่วนที่ 1</div>
+    <h2>ตอนนี้เรามีข้อมูลอะไรอยู่ในมือ</h2>
+    <p class="lede">ข้อมูล 2 ซีซันเต็ม พร้อม "คำตอบ" (ใครเลิกเรียนเดือนไหน) ที่ยืนยันจากหลายแหล่งแล้ว — นี่คือส่วนที่ยากที่สุดของโปรเจกต์ และมันเสร็จแล้ว</p>
+    <div class="grid2">
+      <div class="stat"><div class="v">223 คน</div><div class="l">ปี 2568 (มี.ค.–ก.ย. 25) · เลิกกลางคัน 63 คน</div></div>
+      <div class="stat"><div class="v">433 คน</div><div class="l">ปี 2569 (มี.ค. 26–ปัจจุบัน) · เลิกแล้ว 178 คน</div></div>
+      <div class="stat"><div class="v">45,584 แถว</div><div class="l">การเข้าเรียนราย EP รวม 2 ปี</div></div>
+      <div class="stat"><div class="v">3,523 ครั้ง</div><div class="l">การทำข้อสอบ checkpoint รวม 2 ปี</div></div>
+    </div>
+    <div class="callout">
+      <p><strong>คุณภาพ label:</strong> ปี 69 เช็คไขว้ 3 ทาง — บิล FlowAccount + ระบบเก่าที่พี่จดมือ + Eduwise — หลังเคลียร์ครบ ตรงกัน <strong>2,598/2,598 ช่อง (100%)</strong> ส่วนปี 68 มาจากชีต subscription ที่บันทึกตอนเกิดเหตุจริง</p>
+    </div>
+  </section>
+
+  <!-- ================= 2. ตารางข้อมูล ================= -->
+  <section>
+    <div class="sec-eyebrow">ส่วนที่ 2</div>
+    <h2>ตารางข้อมูลทั้ง 8 ตัว — มีอะไร ใช้ทำอะไร</h2>
+    <p class="lede">6 ตารางแรกคือข้อมูลดิบที่เราเตรียม อีก 2 ตัวท้ายระบบคำนวณให้เอง · ทุกตารางเชื่อมกันด้วย <code>student_key</code> (บัตรประชาชนของน้องในระบบ: ปี 68 = <code>2568-e68xxx</code>, ปี 69 = รหัสจาก Eduwise)</p>
+
+    <div class="card">
+      <h3 class="tbl-title"><code>students</code><span class="tag y68">ปี 68: 223</span><span class="tag y69">ปี 69: 456</span></h3>
+      <p class="rowdef">1 แถว = นักเรียน 1 คนต่อซีซัน — "น้องคนนี้เป็นใคร"</p>
+      <div class="tbl-wrap"><table>
+        <tr><th>คอลัมน์</th><th>คืออะไร</th><th>ใช้ทำอะไร</th></tr>
+        <tr><td><code>student_key</code> <code>student_code</code> <code>display_name</code></td><td>รหัสอ้างอิง + รหัส e68/e69 + ชื่อ</td><td>เชื่อมทุกตาราง / แสดงในรายงาน</td></tr>
+        <tr><td><code>grade</code></td><td>ระดับชั้น ม.1–ม.3</td><td><strong>feature</strong> — เด็ก ม.3 ปีสอบจริง พฤติกรรมต่างจาก ม.1</td></tr>
+        <tr><td><code>live_or_replay</code></td><td>เรียนสด / เทป</td><td><strong>feature</strong> — เด็กเทปผูกพันน้อยกว่า เสี่ยงกว่า</td></tr>
+        <tr><td><code>old_new</code></td><td>เด็กเก่า / เด็กใหม่</td><td><strong>feature</strong> — เด็กเก่ารู้จักเราแล้ว มักอยู่ทน</td></tr>
+        <tr><td><code>signup_date</code> <code>signup_lateness</code></td><td>วันสมัคร + สมัครช้ากว่าเปิดซีซันกี่เดือน</td><td><strong>feature</strong> — คนมาช้ามักตามไม่ทันแล้วท้อ</td></tr>
+        <tr><td><code>n_subjects</code> <code>subject_ids</code></td><td>จำนวน + รายวิชาที่ลง (1=คณิต 4=ฟิสิกส์ 5=เคมี 6=ชีวะ)</td><td><strong>feature</strong> — ลง 4 วิชา = ตั้งใจกว่า ลง 1 วิชา = ถอนง่าย</td></tr>
+        <tr><td><code>school</code> <code>target_school</code> <code>same_person_key</code></td><td>โรงเรียน / เป้าหมาย / ตัวเชื่อมเด็กซ้ำข้ามปี</td><td>ยังไม่ใช้เทรน (ข้อมูลไม่ครบ) เก็บไว้เผื่ออนาคต</td></tr>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h3 class="tbl-title"><code>attendance_long</code><span class="tag y68">ปี 68: 17,210</span><span class="tag y69">ปี 69: 28,374</span></h3>
+      <p class="rowdef">1 แถว = น้อง 1 คน × วิชา 1 วิชา × คลาส 1 EP — "มาเรียนไหม"</p>
+      <div class="tbl-wrap"><table>
+        <tr><th>คอลัมน์</th><th>คืออะไร</th><th>ใช้ทำอะไร</th></tr>
+        <tr><td><code>subject_id</code> <code>episode_number</code></td><td>วิชาไหน EP ที่เท่าไหร่</td><td>ระบุว่าคลาสไหน</td></tr>
+        <tr><td><code>ep_final_date</code> <code>week_start</code></td><td>วันสอนจริง + สัปดาห์ (ปี 68 มาจากตารางสอนที่พี่ยืนยัน)</td><td>จัด EP เข้าเดือน/สัปดาห์ → คิด % เข้าเรียนรายเดือนได้</td></tr>
+        <tr><td><code>status</code></td><td>present / absent / leave</td><td>วัตถุดิบหลักของ feature การเข้าเรียนทุกตัว</td></tr>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h3 class="tbl-title"><code>exams</code> + <code>exam_attempts</code><span class="tag y68">ปี 68: 30 ชุด / 1,326 ครั้ง</span><span class="tag y69">ปี 69: 67 ชุด / 2,197 ครั้ง</span></h3>
+      <p class="rowdef">exams: ข้อสอบ 1 ชุด · attempts: การทำข้อสอบ 1 ครั้ง — "ขยันแค่ไหน ได้คะแนนเท่าไหร่"</p>
+      <div class="tbl-wrap"><table>
+        <tr><th>คอลัมน์</th><th>คืออะไร</th><th>ใช้ทำอะไร</th></tr>
+        <tr><td><code>exam_id</code> <code>exam_type</code> <code>total_questions</code></td><td>ชุดไหน · practice/checkpoint · เต็มกี่ข้อ</td><td>คิด "ตัวหาร" ว่าน้องควรทำได้กี่ชุด ณ เวลานั้น</td></tr>
+        <tr><td><code>submitted_at</code></td><td>วันที่น้องส่งข้อสอบ</td><td>สำคัญมาก — ให้รู้ว่า "ณ สิ้นเดือน X" น้องทำไปแล้วกี่ชุด (ห้ามแอบดูอนาคต)</td></tr>
+        <tr><td><code>percentage</code> <code>passed</code></td><td>% คะแนน · ผ่านเกณฑ์ 50% ไหม</td><td>feature คะแนนเฉลี่ย — เด็กคะแนนดิ่งมักถอดใจ</td></tr>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h3 class="tbl-title"><code>enrollment_events</code><span class="tag y68">ปี 68: 309</span><span class="tag y69">ปี 69: 612</span></h3>
+      <p class="rowdef">1 แถว = เหตุการณ์สมัคร/เลิก 1 ครั้ง — "ไทม์ไลน์ความสัมพันธ์กับเรา"</p>
+      <div class="tbl-wrap"><table>
+        <tr><th>คอลัมน์</th><th>คืออะไร</th><th>ใช้ทำอะไร</th></tr>
+        <tr><td><code>event_type</code></td><td>enroll / cancel / re_enroll / subject_drop</td><td>สร้าง label + feature "ลดวิชา" (ลดวิชา ≠ churn แต่เป็นสัญญาณเตือน)</td></tr>
+        <tr><td><code>event_date</code> <code>event_month</code></td><td>วันที่มีผล · cancel = เดือนสุดท้ายที่ยังเรียน</td><td>ปักหมุดว่า churn เกิดเดือนไหน (วันยกเลิก = วันที่ 3 ตามรอบจ่าย 27–3)</td></tr>
+        <tr><td><code>source</code> <code>confidence</code></td><td>ข้อมูลมาจากไหน เชื่อได้แค่ไหน</td><td>ตามรอยกลับได้ถ้าเจอตัวเลขแปลก</td></tr>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h3 class="tbl-title"><code>labels_monthly</code> ⭐ ตารางคำตอบ<span class="tag y68">ปี 68: 1,321</span><span class="tag y69">ปี 69: 2,001</span></h3>
+      <p class="rowdef">1 แถว = น้อง 1 คน × เดือนที่ยัง active — "เดือนถัดไปเขาหายไปไหม" นี่คือสิ่งที่โมเดลจะหัดทาย</p>
+      <div class="tbl-wrap"><table>
+        <tr><th>คอลัมน์</th><th>คืออะไร</th><th>ใช้ทำอะไร</th></tr>
+        <tr><td><code>month</code> <code>active</code></td><td>เดือนนั้นน้องยังเรียนอยู่ (จ่ายเงินแล้ว)</td><td>กำหนดว่าแถวไหนเข้าโมเดลได้</td></tr>
+        <tr><td><code>churned_next_month</code></td><td><strong>1</strong> = เดือนถัดไปไม่จ่าย (churn) · <strong>0</strong> = จ่ายต่อ · <strong>ว่าง</strong> = ยังไม่รู้ (เช่น ส.ค. 69 รอรอบจ่าย 3 ก.ย.)</td><td><strong>คำตอบ (y)</strong> ที่โมเดลเรียนรู้</td></tr>
+        <tr><td><code>churn_date</code> <code>label_source</code></td><td>วันยกเลิก + แหล่งข้อมูล</td><td>ใช้ตรวจสอบเท่านั้น — <strong>ห้าม</strong>เป็น feature (จะเป็นการแอบดูเฉลย)</td></tr>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h3 class="tbl-title"><code>weekly_metrics</code> + <code>features_monthly</code><span class="tag auto">ระบบคำนวณเอง</span></h3>
+      <p class="rowdef">ไม่ต้องเตรียม — pipeline สรุปจาก 5 ตารางบนเป็นรายสัปดาห์ แล้วม้วนเป็นรายเดือน: 1 แถว = น้อง 1 คน × เดือน พร้อม feature 16 ตัว (ส่วนที่ 4) ประกบกับคำตอบจาก labels — นี่คือตารางที่เข้าเครื่องเทรนจริง</p>
+    </div>
+  </section>
+
+  <!-- ================= 3. เส้นทางข้อมูล ================= -->
+  <section>
+    <div class="sec-eyebrow">ส่วนที่ 3</div>
+    <h2>เส้นทางของข้อมูล — จากชีตถึงลิสต์รายชื่อน้องเสี่ยง</h2>
+    <figure>
+      <svg viewBox="0 0 980 250" role="img" aria-label="เส้นทางข้อมูล: แหล่งดิบ 3 ทาง ถูกล้างรวมเป็นตารางกลาง แยกเป็น features กับ labels เข้าโมเดล ออกมาเป็นรายงานความเสี่ยงให้ mentor">
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <g fill="none" stroke="currentColor" stroke-width="1.3">
+          <rect x="10" y="18" width="150" height="44" rx="8"/>
+          <rect x="10" y="78" width="150" height="44" rx="8"/>
+          <rect x="10" y="138" width="150" height="44" rx="8"/>
+          <rect x="250" y="66" width="170" height="68" rx="8"/>
+          <rect x="510" y="24" width="160" height="50" rx="8"/>
+          <rect x="510" y="126" width="160" height="50" rx="8"/>
+          <rect x="740" y="66" width="110" height="68" rx="8" stroke-width="2.5" style="stroke:var(--accent)"/>
+          <rect x="740" y="186" width="228" height="50" rx="8"/>
+        </g>
+        <g stroke="currentColor" stroke-width="1.3" marker-end="url(#ar)" fill="none">
+          <line x1="160" y1="40" x2="245" y2="86"/>
+          <line x1="160" y1="100" x2="245" y2="100"/>
+          <line x1="160" y1="160" x2="245" y2="114"/>
+          <line x1="420" y1="86" x2="505" y2="55"/>
+          <line x1="420" y1="114" x2="505" y2="145"/>
+          <line x1="670" y1="49" x2="737" y2="88"/>
+          <line x1="670" y1="151" x2="737" y2="112"/>
+          <path d="M795 134 L795 181"/>
+        </g>
+        <g font-size="13" fill="currentColor" text-anchor="middle" font-weight="600">
+          <text x="85" y="44">บิล + ชีตเก็บเงิน</text><text x="85" y="104">ชีตเช็คชื่อ + ข้อสอบ</text><text x="85" y="164">Eduwise (ปี 69)</text>
+          <text x="335" y="94">ตารางกลาง 6 ตัว</text>
+          <text x="590" y="45">features_monthly</text>
+          <text x="590" y="147">labels_monthly</text>
+          <text x="795" y="94" style="fill:var(--accent)">โมเดล</text>
+          <text x="854" y="207">รายงานเสี่ยงรายเดือน</text>
+        </g>
+        <g font-size="11.5" fill="currentColor" opacity=".75" text-anchor="middle">
+          <text x="335" y="114">schema เดียว 2 ปี</text>
+          <text x="590" y="62">พฤติกรรมเดือน t (X)</text>
+          <text x="590" y="164">เดือน t+1 หายไหม (y)</text>
+          <text x="795" y="112" style="fill:var(--accent)">LogReg</text>
+          <text x="854" y="225">risk score + เหตุผล → mentor</text>
+          <text x="200" y="80">ล้าง/รวม</text>
+          <text x="475" y="35">บท 04</text>
+          <text x="700" y="30">เทรน</text>
+          <text x="826" y="162">ทุกต้นเดือน</text>
+        </g>
+      </svg>
+      <figcaption>ข้อมูลดิบ 3 แหล่งถูกล้างเข้า "ตารางกลาง" schema เดียวกันทั้ง 2 ปี แล้วแยกเป็นคำถาม (X) กับคำตอบ (y) ให้โมเดลเรียน — ผลลัพธ์คือรายงานความเสี่ยงที่ออกทุกต้นเดือน</figcaption>
+    </figure>
+
+    <h3>โจทย์ที่โมเดลตอบ (ประโยคเดียว)</h3>
+    <div class="callout">
+      <p>「ต้นเดือน <strong>t+1</strong> — ดูพฤติกรรมเดือน <strong>t</strong> ของน้องแต่ละคน แล้วบอกว่า <strong>ใครมีโอกาสไม่จ่ายรอบ 27–3 กี่ %</strong>」<br>เช่น ต้นเดือน มิ.ย. ใช้ข้อมูล พ.ค. ทำนายว่าใครจะหายไปเดือน มิ.ย. — ตรงกับกติกาการจ่ายเงินจริงของเราเป๊ะ</p>
+    </div>
+  </section>
+
+  <!-- ================= 4. Features ================= -->
+  <section>
+    <div class="sec-eyebrow">ส่วนที่ 4</div>
+    <h2>Feature 16 ตัวที่โมเดลใช้มอง</h2>
+    <p class="lede">ทุกตัวคำนวณจากข้อมูล "ถึงสิ้นเดือน t เท่านั้น" — อนาคตห้ามเล็ดลอดเข้ามาเด็ดขาด (leakage) ไม่งั้นตอนใช้จริงจะพัง</p>
+    <div class="callout">
+      <p><strong>สำคัญ: feature ทุกตัว "คิดใหม่ทุกสิ้นเดือน"</strong> — 1 แถวข้อมูลเทรน = น้อง 1 คน × เดือน 1 เดือน แม้แต่ค่าสะสมก็ถ่ายรูป ณ เวลานั้น เช่น น้องคนเดียวกัน: สิ้น เม.ย. เข้าเรียนสะสม 70% → สิ้น พ.ค. เหลือ 65% → สิ้น มิ.ย. เหลือ 58% — โมเดลเห็นทั้ง 3 แถวแยกกัน และ "ทิศทางที่ไหลลง" นี่แหละคือสัญญาณ</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">พฤติกรรมเดือนล่าสุด — สัญญาณสดที่สุด</h3>
+      <div class="tbl-wrap"><table>
+        <tr><th>feature</th><th>คืออะไร</th><th>ทำไมบอก churn</th></tr>
+        <tr><td><code>att_month_pct</code></td><td>% เข้าเรียนเดือนนี้</td><td>โดดเรียน = สัญญาณแรกก่อนเลิก</td></tr>
+        <tr><td><code>att_delta</code></td><td>เข้าเรียนเดือนนี้ เทียบเดือนก่อน (ขึ้น/ลง)</td><td>"เคยมาตลอดแล้วหาย" อันตรายกว่า "ไม่ค่อยมาแต่สม่ำเสมอ"</td></tr>
+        <tr><td><code>new_attempts_month</code></td><td>ทำข้อสอบกี่ชุดเดือนนี้</td><td>เลิกทำข้อสอบ = ใจไม่อยู่แล้ว</td></tr>
+        <tr><td><code>pay_delay_days</code> ✨</td><td>เดือนนี้จ่ายเงินเร็ว/ช้ากี่วันเทียบเส้นตายวันที่ 3 (ติดลบ = จ่ายก่อน) · นับเฉพาะในกรอบรอบจ่าย: <strong>วันที่ 20 เดือนก่อน → วันที่ 10</strong> นอกนั้นไม่นับ (อาจไม่ใช่เงินรอบนั้น) · ต้นซีซันพิเศษ: มี.ค. = 1 ม.ค.–26 มี.ค. และ เม.ย. เริ่มนับ 27 มี.ค. (รอบ 27 เพิ่งเริ่มมีครั้งแรก)</td><td><strong>ไอเดียพี่ — พิสูจน์แล้ว (ปี 69):</strong> จองไวตั้งแต่ ม.ค.–ก.พ. churn 7.1% → จ่ายไว 8.1% → จ่ายท้ายรอบ ~11% → <strong>จ่ายเลทหลังเส้นตาย churn 40%</strong> (สูงกว่าฐาน 4 เท่า — สัญญาณแรงสุดในบรรดา feature การเงิน)</td></tr>
+      </table></div>
+      <h3>ภาพสะสมตั้งแต่ต้นซีซัน</h3>
+      <div class="tbl-wrap"><table>
+        <tr><th>feature</th><th>คืออะไร</th><th>ทำไมบอก churn</th></tr>
+        <tr><td><code>att_cum_pct</code></td><td>% เข้าเรียนสะสม</td><td>ฐานนิสัยระยะยาว</td></tr>
+        <tr><td><code>practice_pct</code> <code>checkpoint_pct</code></td><td>ทำข้อสอบไปกี่ % ของที่เปิดแล้ว</td><td>ตามงานทันไหม — เด็กที่ค้างเยอะมักท้อ</td></tr>
+        <tr><td><code>exam_avg_score</code></td><td>คะแนนเฉลี่ย</td><td>คะแนนต่ำต่อเนื่อง → หมดกำลังใจ</td></tr>
+        <tr><td><code>max_silent_weeks</code></td><td>เงียบหาย (ไม่เรียน+ไม่ทำข้อสอบ) ติดกันนานสุดกี่สัปดาห์</td><td>ตัวชี้วัด "หายไปเลย" ที่แรงที่สุดตัวหนึ่ง</td></tr>
+        <tr><td><code>streak_weeks</code></td><td>active ติดต่อกันกี่สัปดาห์</td><td>โมเมนตัมดี = อยู่ต่อ</td></tr>
+        <tr><td><code>months_enrolled</code> <code>month_index</code></td><td>เรียนมากี่เดือน + ตอนนี้เดือนที่เท่าไหร่ของซีซัน</td><td>churn มีฤดูกาล (ปี 68 พีคช่วงกลางซีซัน)</td></tr>
+      </table></div>
+      <h3>โปรไฟล์น้อง (ไม่เปลี่ยนรายเดือน)</h3>
+      <div class="tbl-wrap"><table>
+        <tr><th>feature</th><th>คืออะไร</th><th>ทำไมบอก churn</th></tr>
+        <tr><td><code>grade</code> <code>live_or_replay</code> <code>old_new</code></td><td>ชั้น · สด/เทป · เก่า/ใหม่</td><td>กลุ่มพื้นฐานต่างกัน ความเสี่ยงตั้งต้นต่างกัน</td></tr>
+        <tr><td><code>n_subjects</code></td><td>ลงกี่วิชา</td><td>ลงน้อย = ถอนง่าย · ส่วน <code>signup_lateness</code> (สมัครช้ากี่เดือน) <strong>ตัดออกแล้ว</strong> — ปี 68 ไม่มีข้อมูลวันสมัคร (ทุกคนเริ่ม มี.ค.) และปี 69 วันสมัครใน Eduwise พิสูจน์แล้วว่าคลาดเคลื่อน → ใช้ <code>pay_delay_days</code> วัดความผูกพันแทน ซึ่งแม่นกว่า</td></tr>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ================= 5. เทรน + วัดผล ================= -->
+  <section>
+    <div class="sec-eyebrow">ส่วนที่ 5</div>
+    <h2>เทรนยังไง แล้ววัดว่า "ใช้ได้จริง" ยังไง</h2>
+    <ol class="steps">
+      <li><strong>เทรนแบบผสม 2 ปี</strong> — ตามที่ตกลงกัน: โมเดลตัวจริงเรียนจากทุกแถวที่มีคำตอบ (ปี 68 เต็มซีซัน + ปี 69 ถึงเดือนล่าสุด) เพื่อให้ปรับตัวเข้ากับรุ่นปัจจุบัน</li>
+      <li><strong>วัดผลแบบเดินตามเวลา (expanding window)</strong> — ห้ามสุ่มแบ่ง เพราะจะแอบเห็นอนาคต ตัวเลขสวยเกินจริง:
+        <div class="tbl-wrap"><table>
+          <tr><th>รอบวัด</th><th>เรียนจาก</th><th>สอบกับ</th></tr>
+          <tr><td>1</td><td>ปี 68 ทั้งปี</td><td>69 เม.ย.</td></tr>
+          <tr><td>2</td><td>ปี 68 + 69 มี.ค.</td><td>69 พ.ค.</td></tr>
+          <tr><td>3</td><td>ปี 68 + 69 มี.ค.–เม.ย.</td><td>69 มิ.ย.</td></tr>
+          <tr><td>4</td><td>ปี 68 + 69 มี.ค.–พ.ค.</td><td>69 ก.ค.</td></tr>
+        </table></div>
+        แต่ละรอบจำลองสถานการณ์จริง: "ถ้าใช้โมเดลเดือนนั้น จะแม่นแค่ไหน"</li>
+      <li><strong>ตัวชี้วัดหลัก: precision@30</strong> — ให้โมเดลชี้ 30 คนที่เสี่ยงสุด แล้วนับว่าหลุดจริงกี่คน (เลข 30 = จำนวนที่ mentor โทรตามไหวจริงต่อเดือน)</li>
+      <li><strong>เกณฑ์ผ่าน</strong> — ต้องชนะวิธีปัจจุบัน (tier แดง/ส้มจากการเข้าเรียน) ถ้าไม่ชนะ = ยังไม่ deploy ใช้ลิสต์ผสมไปก่อน</li>
+    </ol>
+    <div class="callout warn">
+      <p><strong>ความคาดหวังที่สมจริง:</strong> จากการซ้อมกับข้อมูลจำลอง โมเดลจับได้ ~30% ใน 30 อันดับแรก เทียบ tier เดิม ~23% — ไม่ใช่หมอดู แต่ทำให้ mentor โทรถูกคนบ่อยขึ้นราว 1 ใน 3 · ของจริงต้องรอเทรนจึงรู้ (churn จริงปี 69 สูงถึง 41% — สัญญาณน่าจะชัดกว่าข้อมูลซ้อม)</p>
+    </div>
+  </section>
+
+  <!-- ================= 6. ปลายทาง ================= -->
+  <section>
+    <div class="sec-eyebrow">ส่วนที่ 6</div>
+    <h2>สุดท้ายจะได้อะไร — หน้าตาของที่ใช้จริง</h2>
+    <p class="lede">ทุกต้นเดือน ระบบออกไฟล์เรียงน้องตามความเสี่ยง พร้อม "เหตุผล" รายคนเป็นภาษาไทย เพื่อให้ mentor รู้ว่าควรคุยเรื่องอะไร:</p>
+    <div class="tbl-wrap"><table>
+      <tr><th>น้อง</th><th class="num">risk</th><th class="num">เข้าเรียนเดือนนี้</th><th>เหตุผลหลักที่เสี่ยง</th></tr>
+      <tr><td>น้องพลอย (2082)</td><td class="num">86%</td><td class="num">50%</td><td>เลิกทำข้อสอบ · การเข้าเรียนดิ่ง · ลงวิชาน้อย</td></tr>
+      <tr><td>น้องภูมิ (2117)</td><td class="num">74%</td><td class="num">62%</td><td>เงียบหาย 2 สัปดาห์ · คะแนนตก</td></tr>
+      <tr><td colspan="4" style="color:var(--muted)">… เรียงลงไปครบทุกคนที่ยัง active (ตัวอย่างจากรอบซ้อม ก.ค.)</td></tr>
+    </table></div>
+    <p>ขั้นถัดจากนั้น (หลังโมเดลผ่านเกณฑ์): ต่อท่อ n8n ส่งลิสต์นี้เข้า LINE ให้ mentor อัตโนมัติทุกต้นเดือน — โครงเดียวกับ Monthly Report ที่มีอยู่แล้ว</p>
+
+    <h3>งานที่เหลือ เรียงตามลำดับ</h3>
+    <div class="tbl-wrap"><table>
+      <tr><th>ลำดับ</th><th>งาน</th><th>ใคร</th><th>เมื่อไหร่</th></tr>
+      <tr><td>1</td><td>รันบท 02 กับข้อมูลจริง → รวม 2 ปีเข้า <code>data/processed/</code></td><td>พี่ (มีผมประกบ)</td><td>เริ่มได้เลย</td></tr>
+      <tr><td>2</td><td>สร้าง features + เทรน + วัด expanding window (บท 04–06)</td><td>พี่ (มีผมประกบ)</td><td>ต่อจากข้อ 1</td></tr>
+      <tr><td>3</td><td>เติมสถานะเดือน ก.ย. 69 หลังปิดรอบจ่าย</td><td>พี่</td><td>หลัง 3 ก.ย.</td></tr>
+      <tr><td>4</td><td>Live test เดือน ก.ย. (ซีซันนี้เหลือรอบเดียว) → ตัดสิน deploy</td><td>เราสองคน</td><td>ต้น ก.ย.</td></tr>
+    </table></div>
+  </section>
+
+
+  <!-- ================= 7. รายละเอียด 9 บท ================= -->
+  <section>
+    <div class="sec-eyebrow">ส่วนที่ 7</div>
+    <h2>เจาะทั้ง 9 บทของหลักสูตร — เรียนอะไร ฝึกอะไร ได้อะไร</h2>
+    <p class="lede">พี่ผ่านทั้ง 9 บทในโหมดซ้อม (ข้อมูลจำลอง) แล้ว — รอบนี้คือรอบ "ของจริง": ทำซ้ำบท 02→08 กับข้อมูล 2 ปีที่เพิ่งเตรียมเสร็จ ทักษะเดิมทั้งหมด แต่ตัวเลขคือธุรกิจจริง · แบบฝึกหัดทุกข้อมีคำใบ้ 2 ชั้น + เฉลย (กติกา: ลองเอง 10 นาทีก่อนเปิด)</p>
+    
+    <div class="card">
+      <h3 class="tbl-title">บท 00 — ติดตั้งเครื่องมือ + ทัวร์ข้อมูล<span class="chip good" style="margin-left:10px;font-size:12px;padding:2px 10px">✓ ครบแล้ว — ใช้เครื่องมือเป็นแล้ว</span></h3>
+      <p class="rowdef">บทนี้ยังไม่มี Machine Learning เลย — เป้าหมายคือเปิด Jupyter ใช้เองให้เป็น และ &quot;เห็นธุรกิจตัวเองใน DataFrame&quot; คือเปิดข้อมูลนักเรียนขึ้นมาดู ตอบคำถามธุรกิจง่ายๆ ด้วย pandas และวาดกราฟแรกได้ด้วยมือตัวเอง (ใช้เวลาราว 60 นาที)</p>
+      <h4 style="margin:14px 0 4px;font-size:15px">หัวข้อในบท</h4>
+      <ol class="steps" style="margin-top:2px"><li>แผนที่หลักสูตร 9 บท — ปลายทางคือ risk report รายเดือน</li><li>วิธีเปิดเครื่องมือ (venv + Jupyter) และโหมดข้อมูล SAMPLE/REAL</li><li>รู้จัก 3 แหล่งข้อมูล: Sheets ปี 68 / Supabase ปี 69 / snapshot จาก PM webapp</li><li>ปัดฝุ่น pandas: read_csv, head/info/describe, filtering, groupby</li><li>weekly_metrics — ชีพจรรายสัปดาห์ของนักเรียน (ฝึก 0.1)</li><li>หา &quot;สถานะล่าสุดของแต่ละคน&quot; ด้วย sort → groupby → last (ฝึก 0.2)</li><li>แอบดูข้อมูลจริงจาก PM webapp (tasks.db แบบ read-only)</li><li>กราฟเส้นแรก — % เข้าเรียนเฉลี่ยรายสัปดาห์ (ฝึก 0.3)</li></ol>
+      <h4 style="margin:14px 0 4px;font-size:15px">แบบฝึกหัด (3 ข้อ) — เติมช่องว่างเองแล้วกด check เป็นปุ่มส่ง</h4>
+      <div class="tbl-wrap"><table>
+        <tr><th>ข้อ</th><th>ให้ทำอะไร</th><th>ฝึกทักษะ</th></tr><tr><td><code>ex_00_01</code></td><td>โหลด weekly_metrics.csv พร้อม parse วันที่ แล้วนับจำนวนนักเรียนไม่ซ้ำ (310 คน) และจำนวนสัปดาห์ไม่ซ้ำ (49 สัปดาห์)</td><td>read_csv + parse_dates + nunique</td></tr><tr><td><code>ex_00_02</code></td><td>หาว่า ณ สัปดาห์ล่าสุด นักเรียนปี 2569 แต่ละคนอยู่ tier สีอะไร แล้วนับจำนวนแต่ละสี (รวม 150 คน)</td><td>กรองปี + sort_values → groupby → last + value_counts</td></tr><tr><td><code>ex_00_03</code></td><td>วาดกราฟเส้น % เข้าเรียนเฉลี่ยรายสัปดาห์ของซีซัน 2569 (22 จุด) พร้อมตั้งชื่อกราฟและแกน</td><td>groupby → mean → plot กราฟเส้น</td></tr>
+      </table></div>
+      <div class="callout" style="margin:14px 0 4px"><p><strong>กับดักสำคัญของบทนี้:</strong> ไฟล์ทุกไฟล์มีข้อมูล 2 ซีซันปนกัน (year = 2568/2569) — ลืมกรอง year เมื่อไหร่ตัวเลข &quot;ปนปี&quot; ทันที และสัปดาห์ที่ไม่มีคลาสเป็น NaN ไม่ใช่ 0 ห้าม fillna(0) ก่อนเฉลี่ย ไม่งั้น &quot;ไม่มีคลาส&quot; กลายเป็น &quot;โดดเรียน&quot;</p></div>
+      <p style="margin:10px 0 0"><strong>จบบทแล้วได้:</strong> ใช้เครื่องมือเป็น (venv + Jupyter + โหมด SAMPLE/REAL), เข้าใจโครงข้อมูลทั้ง 3 แหล่งและเห็นว่า sample หน้าตาเหมือนของจริง, ได้ท่า pandas ประจำหลักสูตร (read_csv+parse_dates, nunique, กรอง year, sort→groupby→last, groupby→mean→plot), ตอบคำถามธุรกิจ 3 ข้อ + กราฟชีพจรการเข้าเรียนซีซัน 2569</p>
+    </div>
+    <div class="card">
+      <h3 class="tbl-title">บท 01 — นิยามปัญหา + สร้าง label<span class="chip good" style="margin-left:10px;font-size:12px;padding:2px 10px">✓ ครบแล้ว — label จริง 2 ปีสร้างเสร็จ (นอกสมุด)</span></h3>
+      <p class="rowdef">เปลี่ยนคำถาม &quot;เด็กคนไหนจะหลุดคอร์ส&quot; ให้เป็นโจทย์ที่คอมพิวเตอร์เรียนรู้ได้ คือ 1 แถวต่อ (นักเรียน, เดือน) พร้อมคำตอบ churned_next_month แล้วลงมือสร้างตาราง label นี้เองจากบันทึกสมัคร/ยกเลิก เพราะระบบเก็บแค่สถานะปัจจุบัน ไม่มีประวัติว่าใครออกเมื่อไหร่</p>
+      <h4 style="margin:14px 0 4px;font-size:15px">หัวข้อในบท</h4>
+      <ol class="steps" style="margin-top:2px"><li>นิยาม churn ของ EWT ให้เป๊ะ (ยกเลิกหมด vs ลดวิชา)</li><li>ทำไมต้องสร้าง label เอง + template ชีตบันทึกยกเลิก (การบ้านจริง)</li><li>สนามซ้อม: toy data นักเรียน 6 คน</li><li>จากเหตุการณ์สมัคร/ยกเลิก → เดือนที่ active</li><li>ติด label แบบ naive แล้วเจอกับดัก censoring</li><li>censor เดือนที่ตอบไม่ได้ให้เป็น NaN</li><li>ใช้ canonical function สร้าง labels จริง 2 ปี</li><li>base rate: churn rate ต่อเดือน + อ่านกราฟแบบเจ้าของธุรกิจ</li></ol>
+      <h4 style="margin:14px 0 4px;font-size:15px">แบบฝึกหัด (5 ข้อ) — เติมช่องว่างเองแล้วกด check เป็นปุ่มส่ง</h4>
+      <div class="tbl-wrap"><table>
+        <tr><th>ข้อ</th><th>ให้ทำอะไร</th><th>ฝึกทักษะ</th></tr><tr><td><code>ex_01_01</code></td><td>จาก toy_events หาว่าน้องแต่ละคน active เดือนไหนบ้าง (enroll → cancel, ไม่มี cancel ให้ยาวถึง ก.ย.) ได้ตาราง active_months 33 แถว</td><td>groupby + filter + ขยาย interval เป็นรายเดือน</td></tr><tr><td><code>ex_01_02</code></td><td>เพิ่มคอลัมน์ churned_next_month แบบ naive: ให้ 1 ตรงเดือนสุดท้ายก่อนน้องหาย นอกนั้น 0</td><td>map + เปรียบเทียบ + astype(int)</td></tr><tr><td><code>ex_01_03</code></td><td>แก้ตาราง naive ให้ตรงชีวิตจริง: เดือน ก.ย. (จบซีซัน) และเดือนที่ยังไม่ปิดยอด (เกิน known_through) ให้เป็น NaN</td><td>boolean mask + .loc + แนวคิด censoring</td></tr><tr><td><code>ex_01_04</code></td><td>โหลด enrollment_events.csv จริง (sample 310 คน) แล้วเรียก build_labels_monthly ทั้งปี 2568 และ 2569 ต่อกันเป็นตาราง labels 1,610 แถว</td><td>read_csv + canonical function + concat</td></tr><tr><td><code>ex_01_05</code></td><td>คำนวณ churn rate ต่อเดือนจากตาราง labels แล้วดูว่าเดือนไหน peak</td><td>groupby + mean (base rate)</td></tr>
+      </table></div>
+      <div class="callout" style="margin:14px 0 4px"><p><strong>กับดักสำคัญของบทนี้:</strong> เดือนที่ยังไม่รู้อนาคต (censored) ต้องกล้าตอบว่า &quot;ไม่รู้&quot; (NaN) — ถ้าเผลอให้เป็น 0 หรือ 1 จะสอนโมเดลด้วยเรื่องโกหก และ label ผิดบทเดียว ทุกบทที่เหลือผิดตามหมด</p></div>
+      <p style="margin:10px 0 0"><strong>จบบทแล้วได้:</strong> ตาราง labels_monthly ครบ 2 ปี (sample 1,610 แถว) + churn rate ต่อเดือน (~9%, โจทย์ imbalanced) + เข้าใจ censoring/label noise + การบ้านจริง: เริ่มกรอก label sheet ปี 68+69 จากแชท LINE/ชีตการเงิน/ความจำทีม</p>
+    </div>
+    <div class="card">
+      <h3 class="tbl-title">บท 02 — Data Wrangling: รวมข้อมูล 2 ปีให้เป็นรูปแบบเดียว<span class="chip warn" style="margin-left:10px;font-size:12px;padding:2px 10px">▶ ขั้นถัดไป — รวมข้อมูลจริง 2 ปี → data/processed/</span></h3>
+      <p class="rowdef">เรียนวิธีจัดการข้อมูลเลอะๆ จาก Google Sheets ปี 68 ให้สะอาดและเข้ารูปแบบ (schema) เดียวกับข้อมูล Eduwise ปี 69 เพื่อให้เอามา train โมเดลข้ามปีได้ พร้อมเข้าใจกับดักโดเมน 4 ข้อของข้อมูลจริงที่ถ้าไม่รู้ ตัวเลขจะเพี้ยนทั้งระบบ</p>
+      <h4 style="margin:14px 0 4px;font-size:15px">หัวข้อในบท</h4>
+      <ol class="steps" style="margin-top:2px"><li>Audit ข้อมูลก่อนแก้ — ตรวจสภาพไฟล์ด้วย .info() / .value_counts() / .isna()</li><li>Clean เข้า contract — แปลงหัวคอลัมน์ไทยและค่า TRUE/FALSE เป็นภาษากลางของโปรเจกต์</li><li>Melt ตาราง wide เป็น long — แปลงตารางเช็คชื่อ W1..W10 เป็นแบบ 1 แถวต่อ 1 เหตุการณ์</li><li>กับดักโดเมน 4 ข้อ + extractor ปี 69 — เข้าใจได้ แต่ห้ามเขียนแก้เอง</li><li>Validate ด้วย contracts.validate_df — ด่านตรวจก่อนส่งข้อมูลต่อ</li><li>Guard function ก่อน concat — เช็คว่า 2 ปีต่อกันสนิทจริงก่อนรวมตาราง</li></ol>
+      <h4 style="margin:14px 0 4px;font-size:15px">แบบฝึกหัด (5 ข้อ) — เติมช่องว่างเองแล้วกด check เป็นปุ่มส่ง</h4>
+      <div class="tbl-wrap"><table>
+        <tr><th>ข้อ</th><th>ให้ทำอะไร</th><th>ฝึกทักษะ</th></tr><tr><td><code>ex_02_01</code></td><td>ตรวจสภาพไฟล์รับสมัครปี 68 (messy_2568_students.csv) แล้วนับจำนวนแถวทั้งหมด แถวขยะ (รหัสว่าง) และแถวที่โรงเรียนว่าง ใส่ใน dict audit</td><td>audit ข้อมูล: len + isna().sum()</td></tr><tr><td><code>ex_02_02</code></td><td>Clean ไฟล์ปี 68 เข้า contract students: ตัดแถวขยะ, เปลี่ยนชื่อคอลัมน์ไทยเป็นอังกฤษ, แปลง TRUE/FALSE 4 วิชาเป็น subject_ids, ตัดช่องว่าง, สร้าง student_key</td><td>filter + rename + apply + str.strip</td></tr><tr><td><code>ex_02_03</code></td><td>แปลงตารางเช็คชื่อแบบ wide (W1..W10) เป็น long: melt, ตัดสัปดาห์ที่ยังไม่บันทึก (ช่องว่างไม่ใช่ขาด!), map มา/ขาด/ลา เป็นภาษา contract</td><td>melt + dropna + map</td></tr><tr><td><code>ex_02_04</code></td><td>อ่านตาราง attendance และ exam_attempts พร้อม parse วันที่ แล้วให้ contract ตรวจ พร้อมนับแถวซ้ำเองอีกชั้น (พิสูจน์ว่ากับดัก 1 และ 3 ถูกจัดการแล้ว)</td><td>parse_dates + validate_df + duplicated</td></tr><tr><td><code>ex_02_05</code></td><td>เขียนฟังก์ชัน assert_same_schema เช็คว่าตาราง 2 ปีมีคอลัมน์และ dtype เข้ากัน ก่อนค่อย concat รวมเป็นตารางเดียว</td><td>เขียน guard function + assert + concat</td></tr>
+      </table></div>
+      <div class="callout" style="margin:14px 0 4px"><p><strong>กับดักสำคัญของบทนี้:</strong> อย่ารีบแก้ข้อมูลก่อน audit และอย่าเขียน logic กับดักโดเมน (EP สอน 2 รอบ, submitted_at, distinct exam_id, ตัวหารเฉพาะบทที่สอน) ขึ้นใหม่เอง — ใช้ extractor กลางที่พิสูจน์แล้วที่เดียว ไม่งั้นตัวเลขไม่ตรงกับรายงาน mentor แล้วจะเถียงกันไม่จบ</p></div>
+      <p style="margin:10px 0 0"><strong>จบบทแล้วได้:</strong> ตารางปี 68 ที่ clean แล้ว 2 ตาราง (students68, att68) เข้า schema เดียวกับปี 69, ผ่านการ validate ด้วย contract, พร้อมฟังก์ชัน guard เช็ค schema ก่อนรวม 2 ปี — และความเข้าใจกับดักโดเมน 4 ข้อของข้อมูล Eduwise</p>
+    </div>
+    <div class="card">
+      <h3 class="tbl-title">บท 03 — EDA: churn หน้าตาเป็นยังไง<span class="chip" style="margin-left:10px;font-size:12px;padding:2px 10px">… รอทำกับข้อมูลจริง (หลังบท 02)</span></h3>
+      <p class="rowdef">ก่อนยกงานให้โมเดล เราต้องเห็น pattern การหายของนักเรียนด้วยตาตัวเองก่อน — บทนี้พาดูว่าเดือนไหนน้องหายเยอะ จาก 100 คนเหลือกี่คนเมื่อเวลาผ่านไป และพฤติกรรมก่อนหาย (เข้าเรียนน้อย, เงียบหาย) ต่างจากคนที่อยู่ต่อแค่ไหน เพื่อได้ทั้งไอเดีย feature สำหรับบทถัดไปและเรื่องเล่าที่ทีม mentor เชื่อ</p>
+      <h4 style="margin:14px 0 4px;font-size:15px">หัวข้อในบท</h4>
+      <ol class="steps" style="margin-top:2px"><li>churn rate รายเดือน เทียบ 2 ซีซัน (pivot_table)</li><li>survival curve — จาก 100 คนเหลือกี่คน (cumprod)</li><li>พฤติกรรมก่อนหาย (1): attendance ฟ้องไหม (merge + boxplot)</li><li>พฤติกรรมก่อนหาย (2): สัญญาณเงียบหาย silent_weeks (crosstab)</li><li>เปิดสนามอิสระ — ตั้งคำถามเองแล้ว groupby หาคำตอบ</li><li>สรุป signal ทั้งบท → ว่าที่ feature ของบท 04</li></ol>
+      <h4 style="margin:14px 0 4px;font-size:15px">แบบฝึกหัด (5 ข้อ) — เติมช่องว่างเองแล้วกด check เป็นปุ่มส่ง</h4>
+      <div class="tbl-wrap"><table>
+        <tr><th>ข้อ</th><th>ให้ทำอะไร</th><th>ฝึกทักษะ</th></tr><tr><td><code>ex_03_01</code></td><td>สร้างตาราง churn rate รายเดือน แยกปี 2568/2569 — ตัดเลขเดือนจาก month แล้วทำ pivot_table เอาค่าเฉลี่ยของ label</td><td>pivot_table + .str slicing</td></tr><tr><td><code>ex_03_02</code></td><td>สร้าง survival curve เทียบ 2 ปี — คิด retention = 1 - churn rate แล้วคูณทบสะสมด้วย cumprod</td><td>cumprod / retention สะสม</td></tr><tr><td><code>ex_03_03</code></td><td>เทียบ attendance สะสมของ churner กับคนอยู่ต่อ — สรุป weekly metrics เหลือเดือนละแถว (สัปดาห์สุดท้าย) แล้ว merge เข้ากับ label</td><td>groupby().last() + merge 2 กุญแจ</td></tr><tr><td><code>ex_03_04</code></td><td>เทียบการแจกแจง silent_weeks ของสองกลุ่ม — หา max ต่อ (คน, เดือน) merge กับ label แล้วทำตารางสัดส่วนด้วย crosstab</td><td>groupby().max() + crosstab normalize</td></tr><tr><td><code>ex_03_05</code></td><td>โจทย์อิสระ: เลือกมุมที่สงสัยเอง (เช่น เรียนสด/เทป, จำนวนวิชา, น้องเก่า/ใหม่) แล้ว merge + groupby หา churn rate ของแต่ละกลุ่ม</td><td>merge + groupby ตั้งคำถามเอง</td></tr>
+      </table></div>
+      <div class="callout" style="margin:14px 0 4px"><p><strong>กับดักสำคัญของบทนี้:</strong> กราฟบอกได้ว่า &quot;ใครเสี่ยง&quot; แต่ correlation ≠ causation (attendance ต่ำเป็นอาการ ไม่ใช่สาเหตุ — mentor ต้องโทรไปฟัง ไม่ใช่สั่งให้เข้าเรียน) และระวัง survivorship bias — ค่าเฉลี่ยปลายซีซันดูดีเพราะคนที่ไม่ไหวออกไปหมดแล้ว</p></div>
+      <p style="margin:10px 0 0"><strong>จบบทแล้วได้:</strong> ความเข้าใจ pattern การ churn จากข้อมูลจริง: เดือน peak (ก.ค.–ส.ค. + เดือนแรกของน้องใหม่), ขนาดปัญหา (สิ้นซีซันเหลือ ~60%), signal ที่ใช้ได้ (attendance ต่างกัน ~10 จุด, เคยเงียบ ≥1 สัปดาห์เสี่ยง ~2.5 เท่า) — พร้อมตารางสรุป signal → ว่าที่ feature สำหรับบท 04 และเครื่องมือติดตัว pivot_table / cumprod / groupby / crosstab / boxplot</p>
+    </div>
+    <div class="card">
+      <h3 class="tbl-title">บท 04 — Feature Engineering: สร้างตาราง (นักเรียน, เดือน)<span class="chip" style="margin-left:10px;font-size:12px;padding:2px 10px">… รอทำกับข้อมูลจริง + merge pay_delay_days</span></h3>
+      <p class="rowdef">แปลงข้อมูลดิบ 5 ตาราง (เข้าเรียน ข้อสอบ engagement ข้อมูลนักเรียน) ให้กลายเป็นตาราง features รายเดือน — 1 แถว = นักเรียน 1 คนใน 1 เดือน พร้อมคำตอบว่าเดือนถัดไปจะหายไหม โดยยึดกฎเหล็กว่าทุกตัวเลขต้อง &quot;รู้ได้จริง ณ สิ้นเดือนนั้น&quot; เท่านั้น เพื่อให้โมเดลบทถัดไปใช้งานได้จริงเหมือนตอน mentor ต้องตัดสินใจโทรหาเด็กต้นเดือน</p>
+      <h4 style="margin:14px 0 4px;font-size:15px">หัวข้อในบท</h4>
+      <ol class="steps" style="margin-top:2px"><li>Panel data — 1 แถว = (นักเรียน, เดือน) กับกฎเหล็ก &quot;ยืนที่สิ้นเดือน t มองย้อนหลังเท่านั้น&quot;</li><li>4.1 โครง panel จาก labels_monthly + month_index (เดือนที่เท่าไรของซีซัน)</li><li>4.2 Attendance features — % เข้าเรียนเดือนนี้ / สะสม / เปลี่ยนแปลงจากเดือนก่อน</li><li>4.3 Exam features — จำนวนข้อสอบที่ส่งเดือนนี้ + คะแนนเฉลี่ยสะสม</li><li>4.4 Engagement features — ย่อข้อมูลรายสัปดาห์ (silent, streak, practice) เป็นรายเดือน</li><li>4.5 รวมร่าง + static features (ชั้นเรียน สด/เทป เก่า/ใหม่ ฯลฯ) แล้วเทียบกับเฉลยกลาง</li><li>4.6 ด่านกับดัก leakage — feature &quot;เทพเกินจริง&quot; ที่แอบเป็นเฉลยจากอนาคต</li><li>4.7 validate ด้วย contract แล้วเซฟ features_monthly.csv ส่งต่อบท 05</li></ol>
+      <h4 style="margin:14px 0 4px;font-size:15px">แบบฝึกหัด (7 ข้อ) — เติมช่องว่างเองแล้วกด check เป็นปุ่มส่ง</h4>
+      <div class="tbl-wrap"><table>
+        <tr><th>ข้อ</th><th>ให้ทำอะไร</th><th>ฝึกทักษะ</th></tr><tr><td><code>ex_04_01</code></td><td>สร้างโครง panel จาก labels_monthly: กรองเฉพาะเดือนที่นักเรียน active เก็บ 4 คอลัมน์หลัก แล้วเติม month_index (เดือนที่เท่าไรของซีซัน แยกตามปี 2568/2569) โดยห้ามทิ้งแถวที่คำตอบเป็น NaN — ได้ตาราง 1,610 แถว</td><td>กรองข้อมูล + map dict สร้างคอลัมน์ใหม่</td></tr><tr><td><code>ex_04_02</code></td><td>คำนวณ features การเข้าเรียนทั้ง panel: วนทีละเดือน → ตัดข้อมูลด้วย cutoff ก่อน → คิด % เข้าเรียนเดือนนี้ / สะสม / delta (เดือนนี้ลบเดือนก่อน) รายคน แล้ว map กลับเข้า panel</td><td>loop + cutoff + groupby + map</td></tr><tr><td><code>ex_04_03</code></td><td>คำนวณ features ข้อสอบทั้ง panel: คะแนนเฉลี่ยสะสมถึงสิ้นเดือน และจำนวนชุดที่ส่งใหม่ในเดือนนั้น (คนไม่ส่งเลยต้องเป็น 0 ไม่ใช่ NaN) โดยใช้ submitted_at เท่านั้น</td><td>cutoff + groupby mean/size + fillna(0)</td></tr><tr><td><code>ex_04_04</code></td><td>ย่อข้อมูลรายสัปดาห์เป็นรายเดือน: หา max_silent_weeks (ค่าสูงสุดในเดือน) และดึงค่า streak / practice / checkpoint จากสัปดาห์สุดท้ายของเดือน (snapshot) รายคน</td><td>groupby max + หาแถวสุดท้าย (sort + drop_duplicates)</td></tr><tr><td><code>ex_04_05</code></td><td>ประกอบร่าง: merge สาม panel (เข้าเรียน+ข้อสอบ+engagement) เข้าด้วยกัน แล้ว merge ข้อมูลนิ่งจากตาราง students อีก 5 คอลัมน์ + สร้าง months_enrolled — เลขต้องตรงกับเฉลยกลางทุกช่อง</td><td>merge หลายตารางแบบไม่ให้แถวบวม/คอลัมน์ชน</td></tr><tr><td><code>ex_04_06</code></td><td>สืบสวน feature ปริศนาที่ทำ AP พุ่ง 0.99: หาหลักฐานว่า att_next_month_pct คือข้อมูลจากอนาคต (leakage) ตัดสินคดีด้วยการลบคอลัมน์นี้ทิ้ง แล้วเขียนเหตุผลอธิบายด้วยตัวเอง</td><td>ดมกลิ่นและกำจัด temporal leakage</td></tr><tr><td><code>ex_04_07</code></td><td>ส่งมอบงาน: ให้ contracts.validate_df ตรวจตารางสุดท้าย (คอลัมน์ครบ ชนิดถูก ไม่มีคอลัมน์ต้องห้าม) แล้วเซฟเป็น features_monthly.csv ด้วย index=False</td><td>validate contract + to_csv</td></tr>
+      </table></div>
+      <div class="callout" style="margin:14px 0 4px"><p><strong>กับดักสำคัญของบทนี้:</strong> ทุก feature ของเดือน t ต้องรู้ได้จริง ณ สิ้นเดือน t เท่านั้น — feature ที่ &quot;ดีเกินจริง&quot; (เช่น AP 0.99) มักเป็นเฉลยจากอนาคตปลอมตัวมา (temporal leakage) ซึ่งจะทำให้โมเดลดูเก่งตอนทดสอบแต่ใช้งานจริงไม่ได้เลย</p></div>
+      <p style="margin:10px 0 0"><strong>จบบทแล้วได้:</strong> ไฟล์ features_monthly.csv (1,610 แถว × 20 คอลัมน์) ที่ผ่านการตรวจ contract แล้ว พร้อมใช้เทรนโมเดลในบท 05 + ความเข้าใจเรื่อง panel data, กฎ cutoff ตามเวลา และภูมิคุ้มกันต่อ temporal/treatment leakage</p>
+    </div>
+    <div class="card">
+      <h3 class="tbl-title">บท 05 — โมเดลแรก: Logistic Regression<span class="chip" style="margin-left:10px;font-size:12px;padding:2px 10px">… รอทำกับข้อมูลจริง</span></h3>
+      <p class="rowdef">เทรนโมเดลทำนาย churn ตัวแรกด้วย Logistic Regression และเรียนรู้วิธี &quot;วัดผลให้เป็น&quot; เมื่อเด็กที่หายจริงมีแค่ ~9% — เลิกดู accuracy แล้วหันมาวัดแบบที่ธุรกิจใช้ได้จริง เช่น &quot;โทร 30 สาย เจอตัวจริงกี่คน&quot; พร้อมพิสูจน์ว่าโมเดลชนะระบบ tier ที่ mentor ใช้อยู่</p>
+      <h4 style="margin:14px 0 4px;font-size:15px">หัวข้อในบท</h4>
+      <ol class="steps" style="margin-top:2px"><li>เตรียมของ: rebuild features + แบ่ง train/test ตามเวลา (สอนด้วยปี 68 สอบด้วยปี 69)</li><li>กับดัก accuracy: หมอดูขี้เกียจที่ทายว่าไม่มีใคร churn ก็ได้ 91%</li><li>5.1 ColumnTransformer — ครัวเตรียมข้อมูล (เติม NaN, สเกลตัวเลข, one-hot)</li><li>5.2 Pipeline + LogisticRegression — เทรนโมเดลแรก กัน leakage อัตโนมัติ</li><li>5.3 Precision / Recall / PR curve / AP — ภาษาของคนตามหาตัวจริง</li><li>5.4 precision@30 — โทร 30 สาย เจอเด็กเสี่ยงตัวจริงกี่คน</li><li>5.5 สังเวียน baseline — เดามั่ว vs tier ของ mentor vs โมเดล</li><li>สรุปบท + ทางไปบท 06 (วัดผลเข้มข้นและจูนโมเดล)</li></ol>
+      <h4 style="margin:14px 0 4px;font-size:15px">แบบฝึกหัด (5 ข้อ) — เติมช่องว่างเองแล้วกด check เป็นปุ่มส่ง</h4>
+      <div class="tbl-wrap"><table>
+        <tr><th>ข้อ</th><th>ให้ทำอะไร</th><th>ฝึกทักษะ</th></tr><tr><td><code>ex_05_01</code></td><td>ประกอบ ColumnTransformer 2 เส้นทาง: ตัวเลข (เติมรูด้วย median แล้วสเกล) + หมวดหมู่ (one-hot แบบเมินค่าที่ไม่เคยเห็น)</td><td>ColumnTransformer + Pipeline เตรียมข้อมูล</td></tr><tr><td><code>ex_05_02</code></td><td>ต่อครัวเข้ากับ LogisticRegression (class_weight=balanced) แล้ว fit ด้วยปี 68 และขอคะแนนความเสี่ยง (predict_proba) ของปี 69</td><td>เทรน Pipeline + ขอคะแนนความเสี่ยง</td></tr><tr><td><code>ex_05_03</code></td><td>คำนวณ PR curve และ Average Precision ของโมเดลบนข้อสอบปี 69 พร้อมวาดกราฟเทียบเส้นเดามั่ว</td><td>PR curve + Average Precision</td></tr><tr><td><code>ex_05_04</code></td><td>คำนวณ precision@30 แล้วแปลเป็นภาษาคน: โทร 30 สายเจอตัวจริง 9 คน เทียบกับโทรสุ่ม</td><td>precision@k ตัววัดเชิงธุรกิจ</td></tr><tr><td><code>ex_05_05</code></td><td>สร้างตารางประลอง 3 แถว (เดามั่ว / tier ของ mentor / โมเดล) เทียบ AP กับ precision@30 บนปี 69</td><td>เปรียบเทียบโมเดลกับ baseline</td></tr>
+      </table></div>
+      <div class="callout" style="margin:14px 0 4px"><p><strong>กับดักสำคัญของบทนี้:</strong> เมื่อ churn มีแค่ ~9% accuracy คือตัวเลขหลอก (ทายว่า &quot;ไม่มีใครหาย&quot; ก็ได้ 91% ฟรี) — ต้องวัดด้วย precision/recall/AP และ precision@30 ที่ตอบคำถามจริงว่า &quot;โทร 30 สายเจอตัวจริงกี่คน&quot; พร้อมกฎเหล็ก: ข้อมูล test ห้ามโดน fit เด็ดขาด</p></div>
+      <p style="margin:10px 0 0"><strong>จบบทแล้วได้:</strong> โมเดล churn ตัวแรก (Pipeline: ColumnTransformer + LogisticRegression) ที่เทรนด้วยปี 68 สอบด้วยปี 69 ได้ AP ~0.223 และ precision@30 = 0.30 (โทร 30 สายเจอตัวจริง 9 คน = 3 เท่าของสุ่ม) ชนะทั้งเดามั่วและระบบ tier ของ mentor พร้อมตารางเปรียบเทียบ baseline ที่เอาไปเล่าให้ทีมฟังได้เลย</p>
+    </div>
+    <div class="card">
+      <h3 class="tbl-title">บท 06 — Validation ที่เชื่อถือได้ + จุดตัดที่ mentor โทรไหว<span class="chip" style="margin-left:10px;font-size:12px;padding:2px 10px">… รอทำกับข้อมูลจริง — จุดตัดสิน deploy</span></h3>
+      <p class="rowdef">เรียนรู้วิธีวัดผลโมเดลให้เชื่อถือได้จริงกับข้อมูลขนาดเล็กที่มีมิติเวลา (แทนการสุ่มแบ่งข้อมูลที่ให้คะแนนหลอก) แล้วแปลงคะแนนความเสี่ยงเป็นการตัดสินใจธุรกิจ: เลือกจุดตัดที่ mentor โทรไหวจริง (~30 สาย/เดือน) ก่อนเซฟโมเดลตัวจริงไว้ใช้ในบทถัดไป</p>
+      <h4 style="margin:14px 0 4px;font-size:15px">หัวข้อในบท</h4>
+      <ol class="steps" style="margin-top:2px"><li>3 โรคของข้อมูลเรา — ทำไม random split โกหก</li><li>Expanding window: replay อดีตเดือนต่อเดือนเหมือนใช้งานจริง</li><li>ศึก 9 ยก: LogReg vs HGB (+ กับดัก GroupKFold ถ้าจะ tune)</li><li>Bootstrap CI: คะแนนบวก/ลบได้แค่ไหน — วิชาความถ่อมตัว</li><li>Threshold sweep: เลือกจุดตัดตามกำลัง mentor (~30 สาย/เดือน)</li><li>Sensitivity check: ถ้า label ไม่ชัวร์ผิดจริง ข้อสรุปพังไหม</li><li>GATE ก่อน deploy (ชนะ tier heuristic ไหม) + เซฟ bundle ลงไฟล์</li></ol>
+      <h4 style="margin:14px 0 4px;font-size:15px">แบบฝึกหัด (6 ข้อ) — เติมช่องว่างเองแล้วกด check เป็นปุ่มส่ง</h4>
+      <div class="tbl-wrap"><table>
+        <tr><th>ข้อ</th><th>ให้ทำอะไร</th><th>ฝึกทักษะ</th></tr><tr><td><code>ex_06_01</code></td><td>เขียน loop แบ่ง train/test แบบ expanding window เองกับมือ (train = เดือนก่อนหน้า, test = เดือนนั้น) สร้างตาราง fold_table แล้วพิสูจน์ว่าตรงกับฟังก์ชันกลาง churn_utils.expanding_window_splits ทุกช่อง</td><td>time-based split + loop สร้าง DataFrame</td></tr><tr><td><code>ex_06_02</code></td><td>จัดศึกครบ 9 ยก: วน expanding window ทุกยก fit ทั้ง LogReg และ HGB วัด AP รายเดือน เก็บเป็นตาราง duel แล้ว print ค่าเฉลี่ยดูว่าใครชนะ</td><td>เปรียบเทียบโมเดลใต้กติกาเดียวกัน + วัด AP</td></tr><tr><td><code>ex_06_03</code></td><td>คำนวณ bootstrap 95% CI ของ AP ผู้ชนะ (p_model) บนคำทำนาย OOF ปี 69 เก็บ tuple (point, lo, hi) ใน ci_ap แล้วอ่านช่วงให้เป็น</td><td>bootstrap CI + อ่านความไม่แน่นอน</td></tr><tr><td><code>ex_06_04</code></td><td>ทำ threshold sweep 13 จุด (0.30-0.90) คำนวณสาย/เดือน + precision + recall ต่อจุด แล้วเลือกแถวที่ภาระโทรใกล้ 30 สาย/เดือนที่สุดเป็น op_point</td><td>threshold sweep + trade-off precision/recall</td></tr><tr><td><code>ex_06_05</code></td><td>หา set นักเรียนที่ label ไม่ชัวร์ (confidence medium/low) ตัดออกจาก oof69 ทั้งคน แล้ววัด AP ซ้ำเทียบกับก้อนเต็ม เก็บผลใน dict sensitivity</td><td>sensitivity check ต่อคุณภาพ label</td></tr><tr><td><code>ex_06_06</code></td><td>fit โมเดลผู้ชนะ (LogReg) บนข้อมูลถึงเดือน 2026-06 ประกอบ bundle 4 ช่อง (pipeline, features, trained_through, metrics) แล้ว joblib.dump ลง models/churn_model.joblib</td><td>fit โมเดลสุดท้าย + เซฟ bundle ด้วย joblib</td></tr>
+      </table></div>
+      <div class="callout" style="margin:14px 0 4px"><p><strong>กับดักสำคัญของบทนี้:</strong> อย่าเชื่อคะแนนจาก random split กับข้อมูลเล็กที่แถวไม่อิสระและมีเวลาไหล — ต้องวัดแบบ expanding window และรายงานคะแนนเป็นช่วง (CI) เสมอ และโมเดลซับซ้อนกว่า (HGB) ไม่ได้แปลว่าดีกว่าโมเดลเรียบง่าย (LogReg) เมื่อข้อมูลมีน้อย</p></div>
+      <p style="margin:10px 0 0"><strong>จบบทแล้วได้:</strong> ไฟล์ models/churn_model.joblib — bundle ของโมเดล LogReg ผู้ชนะ (pipeline + รายชื่อ features + trained_through 2026-06 + metrics) ที่ผ่าน GATE (precision@30 ปี 69: โมเดล 0.200 ≥ tier 0.167) พร้อมให้บท 07-08 ใช้ต่อ + จุดตัดที่เลือก thr≈0.45 (~33 สาย/เดือน, precision ~0.19, recall ~0.56) + ความเข้าใจว่าต้องรายงาน AP เป็นช่วง [0.16, 0.36] ไม่ใช่เลขเดียว</p>
+    </div>
+    <div class="card">
+      <h3 class="tbl-title">บท 07 — อ่านโมเดล: ทำไมน้องคนนี้เสี่ยง<span class="chip" style="margin-left:10px;font-size:12px;padding:2px 10px">… รอทำกับข้อมูลจริง</span></h3>
+      <p class="rowdef">เปิดฝากล่องโมเดลดูว่ามันตัดสินจากอะไร แล้วแปลงตัวเลขข้างในให้เป็นเหตุผลภาษาไทยที่ mentor เอาไปใช้โทรหาน้องได้จริง พร้อมเช็คว่าโมเดลน่าเชื่อพอจะปล่อยใช้งานหรือยัง</p>
+      <h4 style="margin:14px 0 4px;font-size:15px">หัวข้อในบท</h4>
+      <ol class="steps" style="margin-top:2px"><li>เตรียมข้อมูล + โมเดล LogReg ประจำบท (เช็คว่าโมเดลที่เซฟไว้ใช้ตีความได้ไหม)</li><li>7.1 อ่าน coefficients — โมเดลเชิงเส้นคือสูตรบวกคะแนนความเสี่ยง</li><li>7.2 Permutation importance — เครื่องจับโกหก coef (กับดัก features ที่ correlate กัน)</li><li>7.3 explain_student() — แปลงคะแนนเป็น 3 เหตุผลภาษาไทยรายคน</li><li>7.4 Error analysis — โมเดลพลาดใคร (FP ราคาถูก, FN คือแผลจริง)</li><li>7.5 Smell test — top features ต้องเป็นพฤติกรรม ไม่ใช่โปรไฟล์</li></ol>
+      <h4 style="margin:14px 0 4px;font-size:15px">แบบฝึกหัด (5 ข้อ) — เติมช่องว่างเองแล้วกด check เป็นปุ่มส่ง</h4>
+      <div class="tbl-wrap"><table>
+        <tr><th>ข้อ</th><th>ให้ทำอะไร</th><th>ฝึกทักษะ</th></tr><tr><td><code>ex_07_01</code></td><td>ดึงชื่อ features และค่า coef จาก pipeline ของโมเดลจริง เรียงตามขนาด |coef| แล้ววาดกราฟแท่งชื่อไทย (แดง=ดันเสี่ยงขึ้น น้ำเงิน=กดเสี่ยงลง)</td><td>อ่าน coefficients จาก pipeline + เรียงตาม |coef|</td></tr><tr><td><code>ex_07_02</code></td><td>รัน permutation_importance กับโมเดลจริงบน test set (scoring=average_precision) แล้วเทียบกับกราฟ coef — หาตัวที่ coef ใหญ่แต่ importance จิ๋ว</td><td>permutation importance</td></tr><tr><td><code>ex_07_03</code></td><td>เขียนฟังก์ชัน explain_student(student_key, month) คืน string 3 บรรทัด = top-3 ปัจจัยที่ดันความเสี่ยงของเด็กคนนั้น เป็นภาษาไทยส่งให้ mentor</td><td>contributions รายคน + สรุปเป็นภาษาคน</td></tr><tr><td><code>ex_07_04</code></td><td>ตามหา false negatives ของเดือนล่าสุด — เด็กที่ churn จริงแต่ไม่ติด top-30 (คนที่หลุดมือ mentor) พร้อมดู features การเข้าเรียนประกอบ</td><td>error analysis (กรองด้วย isin + เงื่อนไขซ้อน)</td></tr><tr><td><code>ex_07_05</code></td><td>หยิบ top-5 features จากตาราง permutation importance แล้วเช็คว่ามีครอบครัวการเข้าเรียน/เงียบหายติดอย่างน้อย 1 ตัวไหม (ไม่มี = ธงแดง)</td><td>smell test ความน่าเชื่อของโมเดล</td></tr>
+      </table></div>
+      <div class="callout" style="margin:14px 0 4px"><p><strong>กับดักสำคัญของบทนี้:</strong> อ่าน coef เดี่ยว ๆ ไม่ได้เมื่อ features correlate กัน (เช่น practice_pct ได้ coef +0.46 แต่ permutation บอกแทบไม่ได้ใช้) — ต้อง cross-check ด้วย permutation importance และอ่านเป็น &quot;ครอบครัว feature&quot; เสมอ</p></div>
+      <p style="margin:10px 0 0"><strong>จบบทแล้วได้:</strong> ฟังก์ชัน explain_student() ที่แปลงคะแนนเสี่ยงเป็น 3 เหตุผลภาษาไทยรายคน + กราฟ coefficients/permutation importance + รายชื่อ false negatives + ความเข้าใจว่าโมเดลผ่าน smell test (พฤติกรรมนำโปรไฟล์) พร้อมต่อยอดเข้าระบบให้คะแนนรายเดือนในบท 08</p>
+    </div>
+    <div class="card">
+      <h3 class="tbl-title">บท 08 — Deploy: รายงานเด็กเสี่ยงรายเดือน → Eduwise/LINE<span class="chip" style="margin-left:10px;font-size:12px;padding:2px 10px">… รอทำกับข้อมูลจริง — ปลายทาง</span></h3>
+      <p class="rowdef">บทสุดท้ายของคอร์ส พาเอาทุกอย่างที่สร้างมา 7 บทมาต่อเป็น &quot;สายพานรายเดือน&quot; ที่ใช้จริง: รันให้คะแนนความเสี่ยงเดือนใหม่ที่โมเดลไม่เคยเห็น ได้รายชื่อเด็กเสี่ยง 30 อันดับพร้อมเหตุผลภาษาไทยให้ mentor โทรตาม แล้ววางแผนดูแลระบบให้หมุนเองทุกสิ้นเดือน</p>
+      <h4 style="margin:14px 0 4px;font-size:15px">หัวข้อในบท</h4>
+      <ol class="steps" style="margin-top:2px"><li>เตรียมของ: โหลดตาราง 5 ตัว + เปิดกล่องโมเดลจากบท 06 (พร้อมเช็คว่ากล่องยังใช้ได้)</li><li>8.1 สายพานให้คะแนน: ข้อมูลเดือนนั้น → รายชื่อเสี่ยง + เหตุผลภาษาไทย top-3</li><li>8.2 จาก notebook → สคริปต์ production ที่ n8n/cron สั่งรันเองได้</li><li>8.3 เทียบโมเดลใหม่กับระบบ tier แดง-ส้มเดิม (ทับกันแค่ไหน เพิ่มอะไรใหม่)</li><li>8.4 Monitoring: เทียบทำนายไว้ vs เกิดจริงทุกเดือน + แผน retrain</li><li>แผนใช้จริง: live test ส.ค. 69, snapshot enrollment กันข้อมูลถูกทับ, ต่อ LINE/dashboard, ข้อมูลที่ต้องเก็บเพิ่มปี 2570</li></ol>
+      <h4 style="margin:14px 0 4px;font-size:15px">แบบฝึกหัด (4 ข้อ) — เติมช่องว่างเองแล้วกด check เป็นปุ่มส่ง</h4>
+      <div class="tbl-wrap"><table>
+        <tr><th>ข้อ</th><th>ให้ทำอะไร</th><th>ฝึกทักษะ</th></tr><tr><td><code>ex_08_01</code></td><td>สร้าง risk report เดือน ก.ค. 69 (เดือนที่โมเดลไม่เคยเห็น): กรองเด็ก active, สร้าง feature จากครัวกลาง, คิดคะแนนเสี่ยง, ใส่เหตุผล top-3 ภาษาไทย แล้วเรียงจากเสี่ยงมากไปน้อย</td><td>batch scoring out-of-sample + predict_proba</td></tr><tr><td><code>ex_08_02</code></td><td>เรียกสคริปต์ production ให้คะแนนเดือน ก.ค. 69 จากภายนอก notebook แล้วอ่านไฟล์ CSV มาเทียบว่าตรงกับที่คำนวณเองในข้อ 8.1 (การบ้านเสริม: เติม TODO ในไฟล์ score_month.py เอง)</td><td>รันสคริปต์ + กัน train/serve skew</td></tr><tr><td><code>ex_08_03</code></td><td>เทียบ top-30 ของโมเดลกับเด็ก tier แดง/ส้มเดือน ก.ค.: หาสัปดาห์สุดท้ายต่อคน สร้าง set สองฝั่ง แล้วนับส่วนทับ + Jaccard</td><td>เทียบเซ็ต (overlap/Jaccard) vs heuristic เดิม</td></tr><tr><td><code>ex_08_04</code></td><td>เขียน monitoring checklist ของตัวเอง 4 หมวด: งานทุกต้นเดือน, สัญญาณโมเดลเพี้ยน, เงื่อนไข retrain, ข้อมูลที่ต้องเก็บต่อเนื่อง (โจทย์เปิด ไม่มีโค้ด)</td><td>วางแผน monitoring + retrain</td></tr>
+      </table></div>
+      <div class="callout" style="margin:14px 0 4px"><p><strong>กับดักสำคัญของบทนี้:</strong> ตอนใช้จริงต้องสร้าง feature จาก &quot;ครัวกลาง&quot; ฟังก์ชันเดียวกับตอน train เท่านั้น (ห้าม copy โค้ดมาเขียนใหม่) และต้องประกาศ trained_through ก่อนให้คะแนนทุกครั้ง — ไม่งั้นจะได้คะแนนที่หน้าตาปกติแต่ผิดหมดโดยไม่มี error ฟ้อง หรือหลงเชื่อตัวเลขสวยจากเดือนที่โมเดลเห็นเฉลยไปแล้ว</p></div>
+      <p style="margin:10px 0 0"><strong>จบบทแล้วได้:</strong> ไฟล์ reports/risk_2026-07.csv (รายชื่อเด็กเสี่ยง 106 คน เรียงคะแนน พร้อมเหตุผลภาษาไทยให้ mentor ใช้โทร) + สคริปต์ scoring/score_month.py ที่รันเองได้ทุกสิ้นเดือน + monitoring checklist ส่วนตัว + แผน deploy จริงเดือน ส.ค. 69 และซีซัน 2570</p>
+    </div>
+  </section>
+
+  <div class="foot">Earlyworm Tutor · ML-Churn — เอกสารภายใน · ข้อมูล ณ 11 ส.ค. 2026 · รายละเอียดเชิงเทคนิคทั้งหมดอยู่ที่ <code>ml-churn/docs/data-dictionary.md</code></div>
+</div>
