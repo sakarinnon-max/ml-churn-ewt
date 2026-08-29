@@ -68,6 +68,12 @@ This project is a structured, exercise-driven course **built with AI assistance 
 
 **The exercise solutions in notebooks ch01–ch07 are my own work** — label design, EDA, feature engineering, model training, validation, and interpretation, written by me and verified by the course's checkers.
 
+<!-- TODO(CEO) — สำคัญมาก: ยืนยันประโยคบนให้ตรงความจริง 100% ก่อนเปิด public
+     บันทึกช่วงเรียน (14 ส.ค.) ระบุว่า ch04 ข้ามแบบฝึกหัดเป็นส่วนใหญ่ —
+     ถ้ายังไม่ได้กลับไปทำเอง ให้แก้เป็น เช่น
+     "chs 1-3 and 5-7 fully my own; ch04 I worked through with the answer keys"
+     ความแม่นยำตรงนี้คือเกราะของคุณตอนถูกถามเรื่อง AI ในสัมภาษณ์ -->
+
 The real-data ETL (Supabase extraction, payment reconciliation) exists privately and is excluded here for data-protection reasons (PDPA): this repo contains **zero real student records** — names in the sample data are synthetic (`น้อง...` pattern), generated with a fixed random seed.
 
 <!-- TODO(CEO): ปรับย่อหน้าบนให้เป็นเสียงคุณเอง + ระบุสิ่งที่คุณภูมิใจว่าทำเองได้ -->
