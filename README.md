@@ -1,6 +1,6 @@
 # Student Churn Early-Warning — Online Tutoring Business
 
-Predicting which students are at risk of cancelling their monthly subscription at a Thai online tutoring school (~660 students/season), so mentors can reach out **before** the cancellation happens.
+Predicting which students are at risk of cancelling their monthly subscription at a Thai online tutoring school (~660 students/season), so we can reach out **before** the cancellation happens.
 
 I run this business. The model was built on our real operational data (attendance, exam checkpoints, engagement, payment timing) — and this public repo runs entirely on a **synthetic sample dataset** so that no real student data ever leaves the company.
 
@@ -19,6 +19,21 @@ Why I built this project:
 | Precision@30 — existing "tier" heuristic | **0.273** |
 
 **The model lost to our existing human-designed tier heuristic** on the metric that matters operationally (precision in the top-30 list our mentors can actually call each month). 
+
+### What the "tier" heuristic is
+
+"Tier" is the simple rule our team was already using before this project. Every week, each student is put into a colour group based on how much of that week's classes they attended:
+
+| Tier | Attendance that week |
+|---|---|
+| 🔴 Red | below 25% |
+| 🟠 Orange | 25–50% |
+| 🟡 Yellow | 51–75% |
+| 🟢 Green | 75% and above |
+
+(A student sitting exactly on a boundary goes to the better colour — exactly 75% is green.)
+
+In the past, mentors followed up **only the red-tier students**, because they are the ones most likely to leave
 
 To me, the most important things I learned from this project:
 1. I now know how to build a model in the real world — I went through the whole process myself, from gathering data to deployment 
