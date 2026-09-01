@@ -1,44 +1,39 @@
 # Student Churn Early-Warning — Online Tutoring Business
 
-> ⚠️ **DRAFT** — โครงและข้อเท็จจริงถูกเตรียมไว้แล้ว ส่วนที่เป็น `TODO(CEO)` เจ้าของโปรเจกต์ต้องเขียนเองด้วยภาษาตัวเองก่อนเปิด public
-
 Predicting which students are at risk of cancelling their monthly subscription at a Thai online tutoring school (~660 students/season), so mentors can reach out **before** the cancellation happens.
 
 I run this business. The model was built on our real operational data (attendance, exam checkpoints, engagement, payment timing) — and this public repo runs entirely on a **synthetic sample dataset** so that no real student data ever leaves the company.
 
-<!-- TODO(CEO): 2-3 ประโยคของคุณเอง — ทำไมถึงลุกขึ้นมาสร้างโมเดลนี้ (เช่น churn เจ็บตรงไหนในธุรกิจจริง) -->
+Why I built this project:
+
+1. I wanted to use the Python, pandas, and scikit-learn skills I taught myself on a real project.
+2. I wanted to solve a real problem in my company: why do students cancel our classes? Instead of just guessing, I use a model to help predict who is at risk — so we can take care of them before they cancel, and keep more students with us.
+
 
 ## Honest results (on real data)
 
-| Metric (season 2569, out-of-fold) | Value |
+| Metric | Value |
 |---|---|
 | Average Precision | 0.213 |
 | Precision@30 — model | 0.240 |
 | Precision@30 — existing "tier" heuristic | **0.273** |
 
-**The model lost to our existing human-designed tier heuristic** on the metric that matters operationally (precision in the top-30 list our mentors can actually call each month). The pre-registered deploy gate therefore says: don't replace the heuristic — **blend** the two ranked lists and keep monitoring.
+**The model lost to our existing human-designed tier heuristic** on the metric that matters operationally (precision in the top-30 list our mentors can actually call each month). 
 
-I consider this the most valuable part of the project: the evaluation was honest enough to say "not yet."
+To me, the most important things I learned from this project:
+1. I now know how to build a model in the real world — I went through the whole process myself, from gathering data to deployment 
+2. My model may not beat "tier" (our previous method for predicting cancellations), but it helps me see risky student behavior that I could not see on my own — the model can.
 
-<!-- TODO(CEO): 1-2 ประโยค — คุณได้เรียนรู้อะไรจากการที่โมเดล "แพ้" heuristic ของทีมตัวเอง -->
-
-## What's inside (method highlights)
-
-- **Right-censored labels** (ch01) — months where the outcome isn't knowable yet are labeled `NaN`, never assumed to be "stayed".
-- **Leakage discipline** (ch04) — every feature is built through a `cutoff()` helper that only sees data available at prediction time; the course even plants a leakage trap (`att_next_month_pct`) that must be caught.
-- **Time-aware validation** (ch06) — expanding-window cross-validation over months, because a random split would let the model peek at the future.
-- **A metric tied to reality** (ch05/06) — precision@30, because 30 is roughly how many outreach calls our mentors can make per month; accuracy would be meaningless at a ~low monthly churn base rate.
-- **Uncertainty** (ch06) — bootstrap confidence intervals before believing any comparison.
-- **Engineering hygiene** — schema contracts (`src/contracts.py`), a sample/real data switch (`src/config.py`), one shared feature builder for both training and scoring (`src/churn_utils.py`) to prevent train/serve skew, and a smoke test gate (`scripts/smoke_test.py`).
 
 ## A few pictures (generated from the synthetic sample in this repo)
 
 | | |
 |---|---|
 | ![Survival curve](figures/survival_curve.png) | ![Threshold vs mentor capacity](figures/threshold_vs_mentor_capacity.png) |
-| *Survival curve — % of the March cohort still enrolled each month* | *Threshold sweep — the cutoff is chosen where mentor call capacity (~30/month) sits* |
+| *Survival curve — of the students who started in March, how many are still with us each month* | *Threshold sweep — we pick the cutoff where our mentors' call capacity (~30 a month) sits* |
 | ![Model comparison](figures/model_comparison_bootstrap_ci.png) | ![Coefficients](figures/model_coefficients.png) |
-| *LogReg vs HistGradientBoosting with bootstrap 95% CIs — overlapping, so keep the simpler model* | *What the model looks at (logistic regression coefficients)* |
+| *Logistic Regression vs a more complex model — the confidence intervals overlap, so we keep the simpler one* | *What the model pays attention to (logistic regression coefficients)* |
+
 
 > Numbers in these charts come from the **synthetic** dataset; the headline results table above is from the real (private) data.
 
@@ -66,32 +61,66 @@ docs/            data dictionary, course guide
 
 This project is a structured, exercise-driven course **built with AI assistance (Claude) acting as the tutor**: the scaffolding, auto-checkers, and answer keys were AI-generated around my real business problem and my real data.
 
-**The exercise solutions in notebooks ch01–ch07 are my own work** — label design, EDA, feature engineering, model training, validation, and interpretation, written by me and verified by the course's checkers.
+## Chapter by chapter — what I did, what I learned, what AI did
 
-<!-- TODO(CEO) — สำคัญมาก: ยืนยันประโยคบนให้ตรงความจริง 100% ก่อนเปิด public
-     บันทึกช่วงเรียน (14 ส.ค.) ระบุว่า ch04 ข้ามแบบฝึกหัดเป็นส่วนใหญ่ —
-     ถ้ายังไม่ได้กลับไปทำเอง ให้แก้เป็น เช่น
-     "chs 1-3 and 5-7 fully my own; ch04 I worked through with the answer keys"
-     ความแม่นยำตรงนี้คือเกราะของคุณตอนถูกถามเรื่อง AI ในสัมภาษณ์ -->
+I am a beginner programmer. I took this course with Claude as my tutor.
+My rule was simple: really learn the main tools — the pandas functions I need
+and basic scikit-learn — and let AI do the heavy technical work.
 
-The real-data ETL (Supabase extraction, payment reconciliation) exists privately and is excluded here for data-protection reasons (PDPA): this repo contains **zero real student records** — names in the sample data are synthetic (`น้อง...` pattern), generated with a fixed random seed.
+**ch00 — Setup and data:** I gathered student data from two seasons: 2568 from
+Google Sheets and LINE chat records, and 2569 from Supabase, the database behind
+our Eduwise platform. The data covers student profiles, attendance, exam attempts,
+and cancellations. AI helped me design the data structure.
 
-<!-- TODO(CEO): ปรับย่อหน้าบนให้เป็นเสียงคุณเอง + ระบุสิ่งที่คุณภูมิใจว่าทำเองได้ -->
+**ch01 — Labels:** Claude taught me how to build labels from the data we have,
+and when a month must be marked NaN (unknown) instead of guessing. I learned the
+pandas tools for preparing data: loc, iloc, groupby, and set_index.
 
-## What I'd do next
+**ch02 — Combining the data:** This chapter combines two years of data with
+different formats into one schema — for example, turning wide tables into long
+format. I relied on AI heavily here: AI built the cleaning steps, and I filled in
+the data decisions in the real assembly — which students to keep, which attendance
+file to use, and checking the churn count.
 
-<!-- TODO(CEO): เลือก 2-3 ข้อที่คุณอยากทำจริงและอธิบายได้ เช่น:
-- เก็บข้อมูลซีซันถัดไปแล้ว retrain + เทียบกับ blend list
-- เพิ่ม features ฝั่ง engagement (Discord activity)
-- ทดสอบ threshold ตาม capacity ของ mentor ที่เปลี่ยนไป
--->
+**ch03 — EDA:** I explored the data myself to look for insights: monthly and
+yearly churn rate with pivot tables, and whether behaviour such as attendance is
+linked to churn, using sort_values, groupby, and merge. I did this EDA on my own
+data before building any model.
 
----
+**ch04 — Feature engineering:** This chapter builds extra features from the data
+we already have, to give the model more to learn from. For example, we have weekly
+attendance, so AI suggested features like cumulative attendance % and the change in
+attendance this month vs last month. The pandas code and AI-written helper functions
+here were quite complex and technical, so I skipped the exercises and learned from
+the answer keys instead.
 
-## สรุปภาษาไทย
+**ch05 — First model:** This is where I trained a real model: Logistic Regression
+inside a scikit-learn Pipeline, with an imputer, a scaler, and one-hot encoding
+before training. Then I measured precision, recall, and the precision-recall (AP)
+curve, and compared the model against random guessing.
 
-โปรเจกต์ทำนายความเสี่ยงที่นักเรียนจะยกเลิกคอร์สรายเดือนของโรงเรียนกวดวิชาออนไลน์ (~660 คน/ซีซัน) เพื่อให้ mentor โทรดูแลได้ก่อนเด็กหาย — เทรนบนข้อมูลจริงของธุรกิจ แต่ repo สาธารณะนี้รันบน**ข้อมูลสังเคราะห์ทั้งหมด**เพื่อคุ้มครองข้อมูลส่วนบุคคลของนักเรียน (PDPA)
+**ch06 — Validation:** I practised validating the model and learned where our data
+is weak. With a random split, the model can train on the future and be tested on
+the past, so it "remembers" instead of predicts — so I used expanding-window
+validation instead. I also ran bootstrap confidence intervals, because our data is
+small and the AP score moves around a lot; a CI shows how much to trust it.
 
-ผลลัพธ์ตรงไปตรงมา: precision@30 ของโมเดล (0.240) **แพ้** ระบบ tier เดิมที่ทีมออกแบบเอง (0.273) → ข้อสรุปคือใช้แบบผสม (blend) ไม่ใช่แทนที่ — และผมถือว่าการประเมินที่ซื่อสัตย์พอจะบอกว่า "ยังไม่ชนะ" คือคุณค่าหลักของงานนี้
+**ch07 — Model interpretation:** I looked at the model's coefficients and
+permutation importance to see which features really matter, and which only look
+important. Then I built a summary of the top-3 reasons for each student, written
+as plain sentences the team can read.
 
-<!-- TODO(CEO): 2-3 ประโยคปิดท้ายภาษาไทยในเสียงของคุณ -->
+**ch08 — Deploy:** This chapter is very technical and not my focus, so AI did all
+of it. The model is deployed on EWT Task, our company's internal website. I designed
+the UI I wanted, so the team can actually use the model's output.
+
+## Deployment update
+
+Since 30 August 2026 the model runs in production on EWT Task, our internal
+website. Every Monday it pulls the latest attendance and exam data from Eduwise,
+scores all active students, and shows mentors a ranked list with the top-3 reasons
+for each student in plain Thai. Mentors log their follow-up calls on the same page.
+
+Because the model did not beat our tier heuristic in validation, the tier list stays
+the primary tool and the model list is a supplement. We will retrain and compare
+both at the end of season 2569.
