@@ -1,26 +1,21 @@
 # Student Churn Early-Warning — Online Tutoring Business
 
-Predicting which students are at risk of cancelling their monthly subscription at a Thai online tutoring school (~660 students/season), so we can reach out **before** the cancellation happens.
+Earlyworm Tutor is an online tutoring school for Thai junior-high students preparing for science-school such as MWIT , KVIS , TU. Students subscribe **month by month** and can cancel anytime — flexible for families, but it means every month each family quietly decides whether to continue, and often we only found out a student was leaving after they were already gone.
 
-I run this business. The model was built on our real operational data (attendance, exam checkpoints, engagement, payment timing) — and this public repo runs entirely on a **synthetic sample dataset** so that no real student data ever leaves the company.
+I run this business. We collect our students' learning data — attendance, exam checkpoints, engagement, payment timing — on our learning platform (Eduwise), and the model was built from that real operational data. This public repo runs entirely on a synthetic sample dataset so that no real student data ever leaves the company.
 
 Why I built this project:
 
 1. I wanted to use the Python, pandas, and scikit-learn skills I taught myself on a real project.
 2. I wanted to solve a real problem in my company: why do students cancel our classes? Instead of just guessing, I use a model to help predict who is at risk — so we can take care of them before they cancel, and keep more students with us.
 
+## What I built
 
-## Honest results (on real data)
+Predicting which students are at risk of cancelling their monthly subscription at a Thai online tutoring school (~660 students/season), so we can reach out **before** the cancellation happens.
 
-| Metric | Value |
-|---|---|
-| Average Precision | 0.213 |
-| Precision@30 — model | 0.240 |
-| Precision@30 — existing "tier" heuristic | **0.273** |
+The model is a logistic regression: it looks at each student's month (attendance, exam checkpoints, engagement) and gives a risk score — how likely is this student to cancel next month?
 
-**The model lost to our existing human-designed tier heuristic** on the metric that matters operationally (precision in the top-30 list our mentors can actually call each month). 
-
-### What the "tier" heuristic is
+## What the "tier" heuristic is
 
 "Tier" is the simple rule our team was already using before this project. Every week, each student is put into a colour group based on how much of that week's classes they attended:
 
@@ -28,18 +23,27 @@ Why I built this project:
 |---|---|
 | 🔴 Red | below 25% |
 | 🟠 Orange | 25–50% |
-| 🟡 Yellow | 51–75% |
+| 🟡 Yellow | 50–75% |
 | 🟢 Green | 75% and above |
 
 (A student sitting exactly on a boundary goes to the better colour — exactly 75% is green.)
 
-In the past, mentors followed up **only the red-tier students**, because they are the ones most likely to leave
+In the past, mentors followed up **only the red-tier students**, because they are the ones most likely to leave. 
+
+# Honest results of model (on real data)
+
+| Metric | Value |
+|---|---|
+| Average Precision | 0.213 |
+| Precision@30 — model | 0.240 |
+| Precision@30 — existing "tier" heuristic | **0.273** |
+
+**The model lost to our existing human-designed tier heuristic** on the metric that matters operationally (precision in the top-30 list our mentors can actually call each month).
 
 To me, the most important things I learned from this project:
-1. I now know how to build a model in the real world — I went through the whole process myself, from gathering data to deployment 
+1. I now know how to build a model in the real world — I went through the whole process myself, from gathering data to deployment
 2. My model may not beat "tier" (our previous method for predicting cancellations), but it helps me see risky student behavior that I could not see on my own — the model can.
-
-
+   
 ## A few pictures (generated from the synthetic sample in this repo)
 
 | | |
